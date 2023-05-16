@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
@@ -24,8 +26,17 @@ func GetJiraClient() (*jira.Client, error) {
 	return client, nil
 }
 
-// func GetTicketsAssignedMe(jiraClient *jira.Client, ticketID string) ([]jira.Ticket, error) {
-// }
+func ListIssuesByProjectCode(projectCode string) ([]jira.Issue, error) {
+	client, _ := GetJiraClient()
 
-// func GetTickets(jiraClient *jira.Client, projectCode string) (*jira.Ticket, error) {
-// }
+	// Define JQL query
+	jql := fmt.Sprintf("project = %s", projectCode)
+
+	// Get list of issues
+	issues, _, err := client.Issue.Search(context.Background(), jql, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return issues, nil
+}

@@ -45,3 +45,9 @@ func GetJiraCredentials() (string, string, string, error) {
 
 	return server, username, secret, err
 }
+
+func GetSavedProjects() []string {
+	projects := viper.GetStringSlice("savedProjects")
+
+	return projects
+}
