@@ -1,13 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/jroimartin/gocui"
-	"github.com/sangdth/lazyjira/jira"
 	"log"
+
+	"github.com/jroimartin/gocui"
 )
 
 func main() {
+	jiraClient, _ := GetJiraClient()
+
+	issue, _, _ := jiraClient.Issue.Get(context.Background(), "ITSDN-3482", nil)
+
+	// print out the issue name
+	fmt.Println(issue.Fields.Summary)
+
 	// Initialize the gocui library
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
