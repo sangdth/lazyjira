@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"github.com/sangdth/lazyjira/jira"
 	"log"
 )
 
