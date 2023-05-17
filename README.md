@@ -12,7 +12,7 @@ server: https://yourproject.atlassian.net
 login: yourname@email.com
 ```
 
-For API token, after generate from atlassian, please add a new record into `Keychain.app`:
+For API token, after generate from [Atlassian](https://id.atlassian.com/manage-profile/security/api-tokens), please add a new record into `Keychain.app`:
 
 - Name: `lazyjira`
 - Account: `yourname@email.com`
