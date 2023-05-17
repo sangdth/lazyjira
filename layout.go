@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
-	"github.com/jroimartin/gocui"
+	ui "github.com/jroimartin/gocui"
 )
 
 const (
@@ -11,43 +11,29 @@ const (
 	projectViewHeight = 20
 )
 
-func layout(g *gocui.Gui) error {
-	maxX, maxY := g.Size()
+func relativeSize(g *ui.Gui) (int, int) {
+	tw, th := g.Size()
 
-	if v, err := g.SetView(projectsViewKey, 0, 0, sideBarWidth, projectViewHeight); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Title = " Projects "
-		v.Highlight = true
-		v.SelBgColor = gocui.ColorGreen
-		v.SelFgColor = gocui.ColorBlack
+	return (tw * 3) / 10, (th * 7) / 10
+}
 
-		savedProjects := GetSavedProjects()
-		for _, project := range savedProjects {
-			fmt.Fprintln(v, project)
-		}
+func layout(g *ui.Gui) error {
+	tw, th := g.Size()
+	rw, rh := relativeSize(g)
+
+	_, err := g.SetView(ProjectsView, 0, 0, rw, th-rh)
+	if err != nil {
+		log.Panicln("Cannot update Projects view", err)
 	}
 
-	if v, err := g.SetView(issuesViewKey, 0, projectViewHeight+1, sideBarWidth, maxY-1); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Title = " Issues "
-		v.Highlight = true
-		v.SelBgColor = gocui.ColorGreen
-		v.SelFgColor = gocui.ColorBlack
+	_, err = g.SetView(IssuesView, 0, th-rh+1, rw, th-3)
+	if err != nil {
+		log.Panicln("Cannot update Issues view", err)
 	}
 
-	if v, err := g.SetView(detailsViewKey, sideBarWidth+1, 0, maxX-1, maxY-1); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Title = " Details "
-		v.Wrap = true
-		if _, err := g.SetCurrentView(projectsViewKey); err != nil {
-			return err
-		}
+	_, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3)
+	if err != nil {
+		log.Panicln("Cannot update Issues view", err)
 	}
 
 	return nil

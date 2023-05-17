@@ -1,60 +1,60 @@
 package main
 
 import (
-	"github.com/jroimartin/gocui"
+	ui "github.com/jroimartin/gocui"
 )
 
 const (
-	allViewsKey     = ""
-	projectsViewKey = "projects"
-	issuesViewKey   = "issues"
-	detailsViewKey  = "details"
+	AllViews     = ""
+	ProjectsView = "projects"
+	IssuesView   = "issues"
+	DetailsView  = "details"
 )
 
-func keybindings(g *gocui.Gui) error {
-	if err := g.SetKeybinding(issuesViewKey, gocui.KeyTab, gocui.ModNone, nextView); err != nil {
+func keybindings(g *ui.Gui) error {
+	if err := g.SetKeybinding(IssuesView, ui.KeyTab, ui.ModNone, nextView); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(projectsViewKey, gocui.KeyTab, gocui.ModNone, nextView); err != nil {
+	if err := g.SetKeybinding(ProjectsView, ui.KeyTab, ui.ModNone, nextView); err != nil {
 		return err
 	}
 
 	// PROJECTS VIEW
 	// Use j/k and arrow down/up to navigate in projects view
-	if err := g.SetKeybinding(projectsViewKey, 'j', gocui.ModNone, cursorDown); err != nil {
+	if err := g.SetKeybinding(ProjectsView, 'j', ui.ModNone, cursorDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(projectsViewKey, gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
+	if err := g.SetKeybinding(ProjectsView, ui.KeyArrowDown, ui.ModNone, cursorDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(projectsViewKey, 'k', gocui.ModNone, cursorUp); err != nil {
+	if err := g.SetKeybinding(ProjectsView, 'k', ui.ModNone, cursorUp); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(projectsViewKey, gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
+	if err := g.SetKeybinding(ProjectsView, ui.KeyArrowUp, ui.ModNone, cursorUp); err != nil {
 		return err
 	}
 
 	// ISSUES VIEW
 	// Use j/k and arrow down/up to navigate in issues view
-	if err := g.SetKeybinding(issuesViewKey, 'j', gocui.ModNone, cursorDown); err != nil {
+	if err := g.SetKeybinding(IssuesView, 'j', ui.ModNone, cursorDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(issuesViewKey, gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
+	if err := g.SetKeybinding(IssuesView, ui.KeyArrowDown, ui.ModNone, cursorDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(issuesViewKey, 'k', gocui.ModNone, cursorUp); err != nil {
+	if err := g.SetKeybinding(IssuesView, 'k', ui.ModNone, cursorUp); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(issuesViewKey, gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
+	if err := g.SetKeybinding(IssuesView, ui.KeyArrowUp, ui.ModNone, cursorUp); err != nil {
 		return err
 	}
 
 	// ALL VIEWS
 	// Use Ctrl-c or q to quit
-	if err := g.SetKeybinding(allViewsKey, gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(AllViews, ui.KeyCtrlC, ui.ModNone, quit); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(allViewsKey, 'q', gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(AllViews, 'q', ui.ModNone, quit); err != nil {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func keybindings(g *gocui.Gui) error {
 	return nil
 }
 
-func nextView(g *gocui.Gui, v *gocui.View) error {
+func nextView(g *ui.Gui, v *ui.View) error {
 	if v == nil || v.Name() == "projects" {
 		_, err := g.SetCurrentView("issues")
 		return err
@@ -83,7 +83,7 @@ func nextView(g *gocui.Gui, v *gocui.View) error {
 	return err
 }
 
-func cursorDown(g *gocui.Gui, v *gocui.View) error {
+func cursorDown(g *ui.Gui, v *ui.View) error {
 	if v != nil {
 		cx, cy := v.Cursor()
 		if err := v.SetCursor(cx, cy+1); err != nil {
@@ -96,7 +96,7 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func cursorUp(g *gocui.Gui, v *gocui.View) error {
+func cursorUp(g *ui.Gui, v *ui.View) error {
 	if v != nil {
 		ox, oy := v.Origin()
 		cx, cy := v.Cursor()
@@ -109,6 +109,6 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.ErrQuit
+func quit(g *ui.Gui, v *ui.View) error {
+	return ui.ErrQuit
 }

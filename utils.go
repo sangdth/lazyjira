@@ -51,3 +51,22 @@ func GetSavedProjects() []string {
 
 	return projects
 }
+
+func LoadSites() error {
+	ProjectsList.SetTitle("Sites")
+
+	savedProjects := GetSavedProjects()
+	if len(savedProjects) == 0 {
+		ProjectsList.SetTitle("No projects (Ctrl-f to add)")
+		ProjectsList.Reset()
+		IssuesList.Reset()
+		IssuesList.SetTitle("No issues")
+		return nil
+	}
+	data := make([]interface{}, len(savedProjects))
+	for i, rr := range savedProjects {
+		data[i] = rr
+	}
+
+	return ProjectsList.SetItems(data)
+}
