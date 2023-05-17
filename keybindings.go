@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	ui "github.com/jroimartin/gocui"
 )
@@ -14,10 +15,7 @@ const (
 )
 
 func keybindings(g *ui.Gui) error {
-	if err := g.SetKeybinding(IssuesView, ui.KeyTab, ui.ModNone, nextView); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(ProjectsView, ui.KeyTab, ui.ModNone, nextView); err != nil {
+	if err := g.SetKeybinding(AllViews, ui.KeyTab, ui.ModNone, SwitchView); err != nil {
 		return err
 	}
 
@@ -76,16 +74,23 @@ func keybindings(g *ui.Gui) error {
 	return nil
 }
 
-func nextView(g *ui.Gui, v *ui.View) error {
-	name := v.Name()
-	// log.printf("name: %s", name)
-
-	if v == nil || v.Name() == name {
-		_, err := g.SetCurrentView(IssuesView)
-		return err
+func SwitchView(g *ui.Gui, v *ui.View) error {
+	switch v.Name() {
+	case ProjectsView:
+		g.SelFgColor = ui.ColorGreen | ui.AttrBold
+		if v == ProjectsList.View {
+			IssuesList.Focus(g)
+			ProjectsList.Unfocus()
+			if strings.Contains(IssuesList.Title, "bookmarks") {
+				g.SelFgColor = ui.ColorMagenta | ui.AttrBold
+			}
+		}
+	case IssuesView:
+		ProjectsList.Focus(g)
+		IssuesList.Unfocus()
 	}
-	_, err := g.SetCurrentView(ProjectsView)
-	return err
+
+	return nil
 }
 
 func cursorDown(g *ui.Gui, v *ui.View) error {
