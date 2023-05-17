@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	ui "github.com/jroimartin/gocui"
 )
 
@@ -75,15 +77,20 @@ func keybindings(g *ui.Gui) error {
 }
 
 func nextView(g *ui.Gui, v *ui.View) error {
-	if v == nil || v.Name() == "projects" {
-		_, err := g.SetCurrentView("issues")
+	name := v.Name()
+	// log.printf("name: %s", name)
+
+	if v == nil || v.Name() == name {
+		_, err := g.SetCurrentView(IssuesView)
 		return err
 	}
-	_, err := g.SetCurrentView("projects")
+	_, err := g.SetCurrentView(ProjectsView)
 	return err
 }
 
 func cursorDown(g *ui.Gui, v *ui.View) error {
+	log.Printf("title: %s", v.Title)
+
 	if v != nil {
 		cx, cy := v.Cursor()
 		if err := v.SetCursor(cx, cy+1); err != nil {

@@ -28,7 +28,7 @@ func CreateList(v *ui.View, ordered bool) *List {
 	list := &List{}
 	list.View = v
 	list.SelBgColor = ui.ColorBlack
-	list.SelFgColor = ui.ColorWhite | ui.AttrBold
+	list.SelFgColor = ui.ColorGreen | ui.AttrBold
 	list.Autoscroll = true
 	list.ordered = ordered
 

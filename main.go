@@ -13,7 +13,7 @@ var (
 )
 
 func main() {
-	// issues, _ := ListIssuesByProjectCode("FF")
+	InitConfig()
 
 	// Initialize the gocui library
 	g, err := ui.NewGui(ui.OutputNormal)
@@ -33,11 +33,6 @@ func main() {
 		log.Panicln("Failed to attach keybindings", err)
 	}
 
-	// savedProjects := GetSavedProjects()
-	// for _, project := range savedProjects {
-	// 	fmt.Fprintln(v, project)
-	// }
-
 	tw, th := g.Size()
 	rw, rh := relativeSize(g)
 
@@ -53,7 +48,6 @@ func main() {
 		if err := LoadSites(); err != nil {
 			log.Panicln("Error while loading projects", err)
 		}
-		log.Print("Loaded initial projects")
 		return nil
 	})
 
@@ -63,6 +57,10 @@ func main() {
 	}
 	IssuesList = CreateList(v, true)
 	IssuesList.Title = " Issues "
+
+	if err := UpdateIssues(); err != nil {
+		log.Println("Error on UpdateIssues", err)
+	}
 
 	Details, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3)
 	if err != nil && err != ui.ErrUnknownView {
