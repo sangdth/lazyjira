@@ -133,7 +133,7 @@ func ListUp(g *ui.Gui, v *ui.View) error {
 		}
 	case IssuesView:
 		if err := IssuesList.MoveUp(); err != nil {
-			log.Println("Error on NewsList.MoveUp()", err)
+			log.Println("Error on IssuesList.MoveUp()", err)
 			return err
 		}
 		// if err := UpdateSummary(); err != nil {
