@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
-	"github.com/spf13/viper"
-	"github.com/zalando/go-keyring"
+	ui "github.com/jroimartin/gocui"
+	viper "github.com/spf13/viper"
+	keyring "github.com/zalando/go-keyring"
 )
 
 const (
@@ -56,8 +58,8 @@ func GetSavedProjects() []string {
 	return projects
 }
 
-func LoadSites() error {
-	ProjectsList.SetTitle("Sites")
+func LoadProjects() error {
+	ProjectsList.SetTitle("Projects")
 
 	savedProjects := GetSavedProjects()
 
@@ -100,4 +102,79 @@ func UpdateIssues() error {
 	}
 
 	return IssuesList.SetItems(data)
+}
+
+func SwitchView(g *ui.Gui, v *ui.View) error {
+	switch v.Name() {
+	case ProjectsView:
+		g.SelFgColor = ui.ColorGreen | ui.AttrBold
+		if v == ProjectsList.View {
+			IssuesList.Focus(g)
+			ProjectsList.Unfocus()
+			if strings.Contains(IssuesList.Title, "bookmarks") {
+				g.SelFgColor = ui.ColorMagenta | ui.AttrBold
+			}
+		}
+	case IssuesView:
+		ProjectsList.Focus(g)
+		IssuesList.Unfocus()
+	}
+
+	return nil
+}
+
+func ListUp(g *ui.Gui, v *ui.View) error {
+	switch v.Name() {
+
+	case ProjectsView:
+		if err := ProjectsList.MoveUp(); err != nil {
+			log.Println("Error on ProjectsList.MoveUp()", err)
+			return err
+		}
+	case IssuesView:
+		if err := IssuesList.MoveUp(); err != nil {
+			log.Println("Error on NewsList.MoveUp()", err)
+			return err
+		}
+		// if err := UpdateSummary(); err != nil {
+		// 	log.Println("Error on UpdateSummary()", err)
+		// 	return err
+		// }
+		// case DetailsView:
+		// 	if err := DetailsList.MoveUp(); err != nil {
+		// 		log.Println("Error on ContentList.MoveUp()", err)
+		// 		return err
+		// 	}
+	}
+	return nil
+}
+
+func ListDown(g *ui.Gui, v *ui.View) error {
+	switch v.Name() {
+
+	case ProjectsView:
+		if err := ProjectsList.MoveDown(); err != nil {
+			log.Println("Error on SitesList.MoveDown()", err)
+			return err
+		}
+	case IssuesView:
+		if err := IssuesList.MoveDown(); err != nil {
+			log.Println("Error on NewsList.MoveDown()", err)
+			return err
+		}
+		// if err := UpdateSummary(); err != nil {
+		// 	log.Println("Error on UpdateSummary()", err)
+		// 	return err
+		// }
+		// case CONTENT_VIEW:
+		// 	if err := ContentList.MoveDown(); err != nil {
+		// 		log.Println("Error on ContentList.MoveDown()", err)
+		// 		return err
+		// 	}
+	}
+	return nil
+}
+
+func Quit(g *ui.Gui, v *ui.View) error {
+	return ui.ErrQuit
 }
