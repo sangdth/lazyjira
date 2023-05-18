@@ -80,7 +80,7 @@ func LoadProjects(v *ui.View) error {
 }
 
 // Make the from for project key, currently hardcoded "FF"
-func UpdateIssues(issues []jira.Issue) error {
+func UpdateIssuesList(issues []jira.Issue) error {
 	IssuesList.Reset()
 	// Details.Clear()
 
@@ -104,11 +104,34 @@ func UpdateIssues(issues []jira.Issue) error {
 	return IssuesList.SetItems(data)
 }
 
+func UpdateStatusesList(issues []jira.Issue) error {
+	StatusesList.Reset()
+
+	if len(issues) == 0 {
+		// StatusesList.SetTitle(fmt.Sprintf("No issues in %v", "FF"))
+		return nil
+	}
+	// IssuesList.SetTitle(fmt.Sprintf("Issues from: %v", "FF"))
+
+	columnStatuses := make(map[string]bool)
+
+	data := make([]interface{}, len(issues))
+	for index, issue := range issues {
+		value := issue.Fields.Status.Name
+		// key := issue.Key
+		// row := fmt.Sprintf("%-2s %s", key, value)
+		data[index] = value
+		columnStatuses[issue.Fields.Status.Name] = true
+		// log.Println(issue.Fields.Status.Name)
+	}
+
+	return StatusesList.SetItems(data)
+}
+
 func ChangeView(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
 	case ProjectsView:
-		g.SelFgColor = ui.ColorGreen | ui.AttrBold
 		if v == ProjectsList.View {
 			ProjectsList.Unfocus()
 		}
@@ -121,6 +144,8 @@ func ChangeView(g *ui.Gui, v *ui.View) error {
 		ProjectsList.Focus(g)
 		IssuesList.Unfocus()
 	}
+
+	g.SelFgColor = ui.ColorGreen | ui.AttrBold
 
 	return nil
 }
@@ -135,6 +160,7 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 
 	case ProjectsView:
 		if err := createStatusView(g); err == nil {
+			OnEnter(g, v)
 			ProjectsList.Unfocus()
 			StatusesList.Focus(g)
 		} else {
@@ -153,6 +179,11 @@ func ListUp(g *ui.Gui, v *ui.View) error {
 			log.Println("Error on ProjectsList.MoveUp()", err)
 			return err
 		}
+	case StatusesView:
+		if err := StatusesList.MoveUp(); err != nil {
+			log.Println("Error on StatusesList.MoveUp()", err)
+			return err
+		}
 	case IssuesView:
 		if err := IssuesList.MoveUp(); err != nil {
 			log.Println("Error on IssuesList.MoveUp()", err)
@@ -168,6 +199,11 @@ func ListDown(g *ui.Gui, v *ui.View) error {
 	case ProjectsView:
 		if err := ProjectsList.MoveDown(); err != nil {
 			log.Println("Error on SitesList.MoveDown()", err)
+			return err
+		}
+	case StatusesView:
+		if err := StatusesList.MoveDown(); err != nil {
+			log.Println("Error on StatusesList.MoveDown()", err)
 			return err
 		}
 	case IssuesView:
@@ -188,8 +224,13 @@ func FetchIssues(g *ui.Gui, code string) error {
 			IssuesList.Clear()
 		}
 
-		if err := UpdateIssues(issues); err != nil {
+		if err := UpdateIssuesList(issues); err != nil {
 			log.Println("Error on UpdateIssues", err)
+			return err
+		}
+
+		if err := UpdateStatusesList(issues); err != nil {
+			log.Println("Error on UpdateStatuses", err)
 			return err
 		}
 
@@ -209,30 +250,14 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 	IssuesList.Clear()
 
 	err := FetchIssues(g, currentItem.(string))
-	if err != nil {
-		IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %v ", currentItem.(string))
-	}
 
-	return nil
+	return err
 }
 
-// Pressing Enter will trigger this one
 func OnEnter(g *ui.Gui, v *ui.View) error {
-	switch v.Name() {
-	case ProjectsView:
-		currentItem := ProjectsList.CurrentItem()
-		if currentItem == nil {
-			return nil
-		}
+	err := OnSelectProject(g, v)
 
-		IssuesList.Clear()
-		IssuesList.Focus(g)
-		g.SelFgColor = ui.ColorGreen | ui.AttrBold
-
-		FetchIssues(g, currentItem.(string))
-	}
-
-	return nil
+	return err
 }
 
 func MakeProjectTabNames(name string) string {

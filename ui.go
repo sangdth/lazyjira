@@ -258,7 +258,7 @@ func (l *List) displayItem(i int) string {
 	if l.ordered {
 		return fmt.Sprintf("%2d. %v%v", i+1, item, sp)
 	} else {
-		return fmt.Sprintf(" %v%v", item, sp)
+		return fmt.Sprintf("%v%v", item, sp)
 	}
 }
 

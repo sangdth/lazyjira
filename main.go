@@ -50,7 +50,7 @@ func main() {
 	if err != nil && err != ui.ErrUnknownView {
 		log.Panicln("Failed to create view", err)
 	}
-	ProjectsList = CreateList(v, true)
+	ProjectsList = CreateList(v, false)
 	ProjectsList.Title = MakeProjectTabNames(ProjectsView)
 	ProjectsList.Focus(g)
 
@@ -65,7 +65,7 @@ func main() {
 	if err != nil && err != ui.ErrUnknownView {
 		log.Panicln("Failed to create view", err)
 	}
-	IssuesList = CreateList(v, true)
+	IssuesList = CreateList(v, false)
 	IssuesList.Title = " Issues "
 
 	Details, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3, 0)
