@@ -58,9 +58,9 @@ func main() {
 	IssuesList = CreateList(v, true)
 	IssuesList.Title = " Issues "
 
-	if err := UpdateIssues(); err != nil {
-		log.Println("Error on UpdateIssues", err)
-	}
+	// if err := UpdateIssues(); err != nil {
+	// 	log.Println("Error on UpdateIssues", err)
+	// }
 
 	Details, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3)
 	if err != nil && err != ui.ErrUnknownView {

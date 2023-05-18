@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	jira "github.com/andygrunwald/go-jira/v2/cloud"
 	ui "github.com/jroimartin/gocui"
 	viper "github.com/spf13/viper"
 	keyring "github.com/zalando/go-keyring"
@@ -79,11 +80,11 @@ func LoadProjects() error {
 }
 
 // Make the from for project key, currently hardcoded "FF"
-func UpdateIssues() error {
+func UpdateIssues(issues []jira.Issue) error {
 	IssuesList.Reset()
 	// Details.Clear()
 
-	issues, _ := ListIssuesByProjectCode("FF")
+	// issues, _ := ListIssuesByProjectCode("FF")
 	if len(issues) == 0 {
 		IssuesList.SetTitle(fmt.Sprintf("No issues in %v", "FF"))
 		return nil
@@ -172,6 +173,42 @@ func ListDown(g *ui.Gui, v *ui.View) error {
 		// 		return err
 		// 	}
 	}
+	return nil
+}
+
+func OnEnter(g *ui.Gui, v *ui.View) error {
+	switch v.Name() {
+	case ProjectsView:
+		currentItem := ProjectsList.CurrentItem()
+		if currentItem == nil {
+			return nil
+		}
+
+		IssuesList.Clear()
+		IssuesList.Focus(g)
+		g.SelFgColor = ui.ColorGreen | ui.AttrBold
+
+		IssuesList.Title = " Fetching issues... "
+		g.Update(func(g *ui.Gui) error {
+			issues, err := ListIssuesByProjectCode(currentItem.(string))
+			if err != nil {
+				IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %v ", currentItem.(string))
+				IssuesList.Clear()
+			} else {
+				IssuesList.Focus(g)
+				if err := UpdateIssues(issues); err != nil {
+					log.Println("Error on UpdateIssues", err)
+					return err
+				}
+				// 	if err := UpdateSummary(); err != nil {
+				// 		log.Println("Error on UpdateSummary", err)
+				// 		return err
+				// 	}
+			}
+			return nil
+		})
+	}
+
 	return nil
 }
 

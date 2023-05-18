@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	ui "github.com/jroimartin/gocui"
 )
 
@@ -17,42 +19,42 @@ func keybindings(g *ui.Gui) error {
 	}
 
 	// PROJECTS VIEW
-	// Use j/k and arrow down/up to navigate in projects view
 	if err := g.SetKeybinding(ProjectsView, 'j', ui.ModNone, ListDown); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(ProjectsView, ui.KeyArrowDown, ui.ModNone, ListDown); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(ProjectsView, 'k', ui.ModNone, ListUp); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(ProjectsView, ui.KeyArrowUp, ui.ModNone, ListUp); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 
 	// ISSUES VIEW
-	// Use j/k and arrow down/up to navigate in issues view
 	if err := g.SetKeybinding(IssuesView, 'j', ui.ModNone, ListDown); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(IssuesView, ui.KeyArrowDown, ui.ModNone, ListDown); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(IssuesView, 'k', ui.ModNone, ListUp); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(IssuesView, ui.KeyArrowUp, ui.ModNone, ListUp); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 
 	// ALL VIEWS
-	// Use Ctrl-c or q to quit
 	if err := g.SetKeybinding(AllViews, ui.KeyCtrlC, ui.ModNone, Quit); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(AllViews, 'q', ui.ModNone, Quit); err != nil {
-		return err
+		log.Fatal("Failed to set keybindings", err)
+	}
+	if err := g.SetKeybinding(AllViews, ui.KeyEnter, ui.ModNone, OnEnter); err != nil {
+		log.Fatal("Failed to set keybindings", err)
 	}
 
 	return nil
