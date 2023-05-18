@@ -113,16 +113,17 @@ func RenderStatusesList(issues []jira.Issue) error {
 	}
 	// IssuesList.SetTitle(fmt.Sprintf("Issues from: %v", "FF"))
 
-	columnStatuses := make(map[string]bool)
+	statusesMap := make(map[string]bool)
+	for _, issue := range issues {
+		statusesMap[issue.Fields.Status.Name] = true
+	}
 
-	data := make([]interface{}, len(issues))
-	for index, issue := range issues {
-		value := issue.Fields.Status.Name
-		// key := issue.Key
+	index := 0
+	data := make([]interface{}, len(statusesMap))
+	for status := range statusesMap {
 		// row := fmt.Sprintf("%-2s %s", key, value)
-		data[index] = value
-		columnStatuses[issue.Fields.Status.Name] = true
-		// log.Println(issue.Fields.Status.Name)
+		data[index] = status
+		index++
 	}
 
 	return StatusesList.SetItems(data)
