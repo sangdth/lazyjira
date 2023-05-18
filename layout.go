@@ -23,17 +23,24 @@ func layout(g *ui.Gui) error {
 
 	_, err := g.SetView(ProjectsView, 0, 0, rw, th-rh)
 	if err != nil {
-		log.Panicln("Cannot update Projects view", err)
+		log.Panicln("Cannot update view", err)
+	}
+
+	if _, err := g.View(StatusesView); err == nil {
+		_, err = g.SetView(StatusesView, 0, 0, rw, th-rh)
+		if err != nil {
+			log.Panicln("Cannot update view", err)
+		}
 	}
 
 	_, err = g.SetView(IssuesView, 0, th-rh+1, rw, th-3)
 	if err != nil {
-		log.Panicln("Cannot update Issues view", err)
+		log.Panicln("Cannot update view", err)
 	}
 
 	_, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3)
 	if err != nil {
-		log.Panicln("Cannot update Issues view", err)
+		log.Panicln("Cannot update view", err)
 	}
 
 	return nil

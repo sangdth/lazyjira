@@ -67,9 +67,9 @@ func (l *List) SetTitle(title string) {
 	l.title = title
 
 	if l.pagesNum() > 1 {
-		l.Title = fmt.Sprintf(" %d/%d - %v ", l.currPageNum(), l.pagesNum(), title)
+		l.Title = fmt.Sprintf("%d/%d - %v", l.currPageNum(), l.pagesNum(), title)
 	} else {
-		l.Title = fmt.Sprintf(" %v ", title)
+		l.Title = fmt.Sprintf("%v", title)
 	}
 }
 

@@ -59,8 +59,8 @@ func GetSavedProjects() []string {
 	return projects
 }
 
-func LoadProjects() error {
-	ProjectsList.SetTitle("Projects")
+func LoadProjects(v *ui.View) error {
+	ProjectsList.SetTitle(MakeProjectTabNames(ProjectsView))
 
 	savedProjects := GetSavedProjects()
 
@@ -104,20 +104,42 @@ func UpdateIssues(issues []jira.Issue) error {
 	return IssuesList.SetItems(data)
 }
 
-func SwitchView(g *ui.Gui, v *ui.View) error {
+func ChangeView(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
+
 	case ProjectsView:
 		g.SelFgColor = ui.ColorGreen | ui.AttrBold
 		if v == ProjectsList.View {
-			IssuesList.Focus(g)
 			ProjectsList.Unfocus()
-			if strings.Contains(IssuesList.Title, "bookmarks") {
-				g.SelFgColor = ui.ColorMagenta | ui.AttrBold
-			}
 		}
+		if strings.Contains(IssuesList.Title, "bookmarks") {
+			g.SelFgColor = ui.ColorMagenta | ui.AttrBold
+		}
+
+		IssuesList.Focus(g)
 	case IssuesView:
 		ProjectsList.Focus(g)
 		IssuesList.Unfocus()
+	}
+
+	return nil
+}
+
+func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
+	switch v.Name() {
+
+	case StatusesView:
+		ProjectsList.Focus(g)
+		StatusesList.Unfocus()
+		g.DeleteView(StatusesView)
+
+	case ProjectsView:
+		if err := createStatusView(g); err == nil {
+			ProjectsList.Unfocus()
+			StatusesList.Focus(g)
+		} else {
+			log.Panicln("Error on createStatusView()", err)
+		}
 	}
 
 	return nil
@@ -136,15 +158,6 @@ func ListUp(g *ui.Gui, v *ui.View) error {
 			log.Println("Error on IssuesList.MoveUp()", err)
 			return err
 		}
-		// if err := UpdateSummary(); err != nil {
-		// 	log.Println("Error on UpdateSummary()", err)
-		// 	return err
-		// }
-		// case DetailsView:
-		// 	if err := DetailsList.MoveUp(); err != nil {
-		// 		log.Println("Error on ContentList.MoveUp()", err)
-		// 		return err
-		// 	}
 	}
 	return nil
 }
@@ -162,15 +175,6 @@ func ListDown(g *ui.Gui, v *ui.View) error {
 			log.Println("Error on NewsList.MoveDown()", err)
 			return err
 		}
-		// if err := UpdateSummary(); err != nil {
-		// 	log.Println("Error on UpdateSummary()", err)
-		// 	return err
-		// }
-		// case CONTENT_VIEW:
-		// 	if err := ContentList.MoveDown(); err != nil {
-		// 		log.Println("Error on ContentList.MoveDown()", err)
-		// 		return err
-		// 	}
 	}
 	return nil
 }
@@ -195,6 +199,7 @@ func FetchIssues(g *ui.Gui, code string) error {
 	return nil
 }
 
+// Pressing Spacebar will trigger this one
 func OnSelectProject(g *ui.Gui, v *ui.View) error {
 	currentItem := ProjectsList.CurrentItem()
 	if currentItem == nil {
@@ -204,7 +209,6 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 	IssuesList.Clear()
 
 	err := FetchIssues(g, currentItem.(string))
-
 	if err != nil {
 		IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %v ", currentItem.(string))
 	}
@@ -212,6 +216,7 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
+// Pressing Enter will trigger this one
 func OnEnter(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 	case ProjectsView:
@@ -228,6 +233,19 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 	}
 
 	return nil
+}
+
+func MakeProjectTabNames(name string) string {
+	switch name {
+
+	case ProjectsView:
+		return " Projects "
+
+	case StatusesView:
+		return " Projects > Statuses "
+	}
+
+	return "Something went wrong in making name"
 }
 
 func Quit(g *ui.Gui, v *ui.View) error {

@@ -6,8 +6,17 @@ import (
 	ui "github.com/jroimartin/gocui"
 )
 
+const (
+	AllViews     = ""
+	ProjectsView = "projects"
+	StatusesView = "statuses"
+	IssuesView   = "issues"
+	DetailsView  = "details"
+)
+
 var (
 	ProjectsList *List
+	StatusesList *List
 	IssuesList   *List
 	Details      *ui.View
 )
@@ -39,14 +48,14 @@ func main() {
 
 	v, err := g.SetView(ProjectsView, 0, 0, rw, th-rh)
 	if err != nil && err != ui.ErrUnknownView {
-		log.Panicln("Failed to create Projects view", err)
+		log.Panicln("Failed to create view", err)
 	}
 	ProjectsList = CreateList(v, true)
-	ProjectsList.Title = " Projects "
+	ProjectsList.Title = MakeProjectTabNames(ProjectsView)
 	ProjectsList.Focus(g)
 
 	g.Update(func(g *ui.Gui) error {
-		if err := LoadProjects(); err != nil {
+		if err := LoadProjects(v); err != nil {
 			log.Panicln("Error while loading projects", err)
 		}
 		return nil
@@ -54,14 +63,10 @@ func main() {
 
 	v, err = g.SetView(IssuesView, 0, th-rh+1, rw, th-3)
 	if err != nil && err != ui.ErrUnknownView {
-		log.Panicln("Failed to create Issues view", err)
+		log.Panicln("Failed to create view", err)
 	}
 	IssuesList = CreateList(v, true)
 	IssuesList.Title = " Issues "
-
-	// if err := UpdateIssues(); err != nil {
-	// 	log.Println("Error on UpdateIssues", err)
-	// }
 
 	Details, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3)
 	if err != nil && err != ui.ErrUnknownView {
@@ -69,18 +74,6 @@ func main() {
 	}
 	Details.Title = " Details "
 	Details.Wrap = true
-
-	// for _, issue := range issues {
-	// 	// Extract relevant information from the issue
-	// 	key := issue.Key
-	// 	summary := issue.Fields.Summary
-
-	// 	// Format the row
-	// 	row := fmt.Sprintf("%-1s %s%*s", key, summary, 51-(len(key)+len(summary)), "")
-
-	// 	// Add the row to the issues view
-	// 	fmt.Fprintln(v, row)
-	// }
 
 	// Start the main event loop
 	if err := g.MainLoop(); err != nil && err != ui.ErrQuit {
