@@ -84,7 +84,6 @@ func UpdateIssues(issues []jira.Issue) error {
 	IssuesList.Reset()
 	// Details.Clear()
 
-	// issues, _ := ListIssuesByProjectCode("FF")
 	if len(issues) == 0 {
 		IssuesList.SetTitle(fmt.Sprintf("No issues in %v", "FF"))
 		return nil
@@ -176,6 +175,43 @@ func ListDown(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
+func FetchIssues(g *ui.Gui, code string) error {
+	IssuesList.Title = " Issues | Fetching... "
+	g.Update(func(g *ui.Gui) error {
+		issues, err := ListIssuesByProjectCode(code)
+		if err != nil {
+			IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %v ", code)
+			IssuesList.Clear()
+		}
+
+		if err := UpdateIssues(issues); err != nil {
+			log.Println("Error on UpdateIssues", err)
+			return err
+		}
+
+		return nil
+	})
+
+	return nil
+}
+
+func OnSelectProject(g *ui.Gui, v *ui.View) error {
+	currentItem := ProjectsList.CurrentItem()
+	if currentItem == nil {
+		return nil
+	}
+
+	IssuesList.Clear()
+
+	err := FetchIssues(g, currentItem.(string))
+
+	if err != nil {
+		IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %v ", currentItem.(string))
+	}
+
+	return nil
+}
+
 func OnEnter(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 	case ProjectsView:
@@ -188,25 +224,7 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 		IssuesList.Focus(g)
 		g.SelFgColor = ui.ColorGreen | ui.AttrBold
 
-		IssuesList.Title = " Fetching issues... "
-		g.Update(func(g *ui.Gui) error {
-			issues, err := ListIssuesByProjectCode(currentItem.(string))
-			if err != nil {
-				IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %v ", currentItem.(string))
-				IssuesList.Clear()
-			} else {
-				IssuesList.Focus(g)
-				if err := UpdateIssues(issues); err != nil {
-					log.Println("Error on UpdateIssues", err)
-					return err
-				}
-				// 	if err := UpdateSummary(); err != nil {
-				// 		log.Println("Error on UpdateSummary", err)
-				// 		return err
-				// 	}
-			}
-			return nil
-		})
+		FetchIssues(g, currentItem.(string))
 	}
 
 	return nil

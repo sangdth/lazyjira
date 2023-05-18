@@ -20,17 +20,28 @@ func GetJiraClient() (*jira.Client, error) {
 	client, err := jira.NewClient(server, tp.Client())
 
 	if err != nil {
-		log.Panicln(err)
+		log.Panicln("Failed to initiate new Jira client", err)
 	}
 
 	return client, nil
+}
+
+func MakeJQL(code string) string {
+	switch code {
+
+	case "Assigned to me":
+		return "assignee=currentUser()"
+
+	default:
+		return fmt.Sprintf("project=%s", code)
+	}
 }
 
 func ListIssuesByProjectCode(projectCode string) ([]jira.Issue, error) {
 	client, _ := GetJiraClient()
 
 	// Define JQL query
-	jql := fmt.Sprintf("project = %s", projectCode)
+	jql := MakeJQL(projectCode)
 
 	// Get list of issues
 	issues, _, err := client.Issue.Search(context.Background(), jql, nil)

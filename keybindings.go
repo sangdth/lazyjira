@@ -31,6 +31,9 @@ func keybindings(g *ui.Gui) error {
 	if err := g.SetKeybinding(ProjectsView, ui.KeyArrowUp, ui.ModNone, ListUp); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
+	if err := g.SetKeybinding(ProjectsView, ui.KeySpace, ui.ModNone, OnSelectProject); err != nil {
+		log.Fatal("Failed to set keybindings", err)
+	}
 
 	// ISSUES VIEW
 	if err := g.SetKeybinding(IssuesView, 'j', ui.ModNone, ListDown); err != nil {

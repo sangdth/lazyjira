@@ -23,6 +23,7 @@ func main() {
 
 	defer g.Close()
 
+	g.SelFgColor = ui.ColorGreen | ui.AttrBold
 	g.Cursor = false
 	g.Highlight = true
 
