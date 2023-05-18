@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	ui "github.com/jroimartin/gocui"
+	ui "github.com/awesome-gocui/gocui"
 )
 
 func keybindings(g *ui.Gui) error {

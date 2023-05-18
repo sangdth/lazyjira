@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	ui "github.com/jroimartin/gocui"
+	ui "github.com/awesome-gocui/gocui"
 )
 
 const (
@@ -25,7 +25,7 @@ func main() {
 	InitConfig()
 
 	// Initialize the gocui library
-	g, err := ui.NewGui(ui.OutputNormal)
+	g, err := ui.NewGui(ui.OutputNormal, true)
 	if err != nil {
 		log.Panicln("Failed to initialize GUI", err)
 	}
@@ -46,7 +46,7 @@ func main() {
 	tw, th := g.Size()
 	rw, rh := relativeSize(g)
 
-	v, err := g.SetView(ProjectsView, 0, 0, rw, th-rh)
+	v, err := g.SetView(ProjectsView, 0, 0, rw, th-rh, 0)
 	if err != nil && err != ui.ErrUnknownView {
 		log.Panicln("Failed to create view", err)
 	}
@@ -61,14 +61,14 @@ func main() {
 		return nil
 	})
 
-	v, err = g.SetView(IssuesView, 0, th-rh+1, rw, th-3)
+	v, err = g.SetView(IssuesView, 0, th-rh+1, rw, th-3, 0)
 	if err != nil && err != ui.ErrUnknownView {
 		log.Panicln("Failed to create view", err)
 	}
 	IssuesList = CreateList(v, true)
 	IssuesList.Title = " Issues "
 
-	Details, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3)
+	Details, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3, 0)
 	if err != nil && err != ui.ErrUnknownView {
 		log.Panicln("Failed to create Details view", err)
 	}

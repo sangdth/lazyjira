@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
-	ui "github.com/jroimartin/gocui"
+	ui "github.com/awesome-gocui/gocui"
 	viper "github.com/spf13/viper"
 	keyring "github.com/zalando/go-keyring"
 )

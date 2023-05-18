@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	ui "github.com/jroimartin/gocui"
+	ui "github.com/awesome-gocui/gocui"
 )
 
 // Page is used to hold info about a list based view
