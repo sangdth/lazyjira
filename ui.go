@@ -15,11 +15,12 @@ type Page struct {
 // List overlads the gocui.View by implementing list specific functionalitys
 type List struct {
 	*ui.View
-	title       string
-	items       []interface{}
-	pages       []Page
-	currPageIdx int
-	ordered     bool
+	code      string
+	title     string
+	items     []interface{}
+	pages     []Page
+	pageIndex int
+	ordered   bool
 }
 
 // CreateList initializes a List object with an existing View by applying some
@@ -63,6 +64,12 @@ func (l *List) Reset() {
 	l.pages = []Page{}
 	l.Clear()
 	l.ResetCursor()
+}
+
+// Change the project code means old data will be gone
+func (l *List) SetCode(code string) {
+	l.code = code
+	l.Reset()
 }
 
 // SetTitle will set the title of the View and display paging information of the
@@ -112,7 +119,7 @@ func (l *List) DrawCurrentPage() error {
 	if l.IsEmpty() {
 		return nil
 	}
-	return l.displayPage(l.currPageIdx)
+	return l.displayPage(l.pageIndex)
 }
 
 // MoveDown moves the cursor to the line below or the next page if any
@@ -201,7 +208,7 @@ func (l *List) currPageNum() int {
 	if l.IsEmpty() {
 		return 0
 	}
-	return l.currPageIdx + 1
+	return l.pageIndex + 1
 }
 
 // currentCursorY returns the current Y of the cursor
@@ -213,7 +220,7 @@ func (l *List) currentCursorY() int {
 
 // currPage returns the current page being displayd
 func (l *List) currPage() Page {
-	return l.pages[l.currPageIdx]
+	return l.pages[l.pageIndex]
 }
 
 // height ewturns the current height of the View
@@ -242,13 +249,13 @@ func (l *List) pagesNum() int {
 
 // nextPageIdx returns the index of the next page to be displayed circularlt
 func (l *List) nextPageIdx() int {
-	return (l.currPageIdx + 1) % l.pagesNum()
+	return (l.pageIndex + 1) % l.pagesNum()
 }
 
 // prevPageIdx returns the index of the prev page to be displayed circularlt
 func (l *List) prevPageIdx() int {
-	pidx := (l.currPageIdx - 1) % l.pagesNum()
-	if l.currPageIdx == 0 {
+	pidx := (l.pageIndex - 1) % l.pagesNum()
+	if l.pageIndex == 0 {
 		pidx = l.pagesNum() - 1
 	}
 	return pidx
@@ -269,8 +276,8 @@ func (l *List) displayItem(i int) string {
 // displayPage resets the currentPageIdx and displays the requested page
 func (l *List) displayPage(p int) error {
 	l.Clear()
-	l.currPageIdx = p
-	page := l.pages[l.currPageIdx]
+	l.pageIndex = p
+	page := l.pages[l.pageIndex]
 	for i := page.offset; i < page.offset+page.limit; i++ {
 		if _, err := fmt.Fprintln(l.View, l.displayItem(i)); err != nil {
 			return err

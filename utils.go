@@ -214,7 +214,9 @@ func ListDown(g *ui.Gui, v *ui.View) error {
 }
 
 func FetchIssues(g *ui.Gui, code string) error {
+	IssuesList.SetCode(code)
 	IssuesList.Title = " Issues | Fetching... "
+
 	g.Update(func(g *ui.Gui) error {
 		issues, err := ListIssuesByProjectCode(code)
 		if err != nil {
@@ -262,11 +264,6 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 
 	IssuesList.Clear()
 
-	// err := createStatusView(g)
-	// if err != nil {
-	// 	log.Panicln("Error on createStatusView()", err)
-	// }
-
 	err := FetchIssues(g, currentItem.(string))
 
 	return err
@@ -278,16 +275,20 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 		return nil
 	}
 
-	if ProjectsList.IsEmpty() {
+	projectCode := currentItem.(string)
 
+	if IssuesList.IsEmpty() || IssuesList.code != projectCode {
 		err := OnSelectProject(g, v)
-		return err
+		if err != nil {
+			log.Println("Error on OnSelectProject", err)
+		}
 	}
 
 	if err := createStatusView(g); err == nil {
-		err := FetchStatuses(g, currentItem.(string))
-
-		return err
+		err := FetchStatuses(g, projectCode)
+		if err != nil {
+			log.Println("Error on FetchStatuses", err)
+		}
 	}
 
 	return nil
