@@ -28,7 +28,8 @@ func CreateList(v *ui.View, ordered bool) *List {
 	list := &List{}
 	list.View = v
 	list.SelBgColor = ui.ColorBlack
-	list.SelFgColor = ui.ColorGreen | ui.AttrBold
+	// list.SelFgColor = ui.ColorGreen | ui.AttrBold
+	// list.FrameColor = ui.ColorGreen
 	list.Autoscroll = true
 	list.ordered = ordered
 
@@ -43,6 +44,8 @@ func (l *List) IsEmpty() bool {
 // Focus hightlights the View of the current List
 func (l *List) Focus(g *ui.Gui) error {
 	l.Highlight = true
+	l.SelFgColor = ui.ColorGreen | ui.AttrBold
+	l.FrameColor = ui.ColorGreen
 	_, err := g.SetCurrentView(l.Name())
 
 	return err
@@ -50,6 +53,7 @@ func (l *List) Focus(g *ui.Gui) error {
 
 // Unfocus is used to remove highlighting from the current list
 func (l *List) Unfocus() {
+	l.FrameColor = ui.ColorDefault
 	l.Highlight = false
 }
 

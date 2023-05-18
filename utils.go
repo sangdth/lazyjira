@@ -80,7 +80,7 @@ func LoadProjects(v *ui.View) error {
 }
 
 // Make the from for project key, currently hardcoded "FF"
-func UpdateIssuesList(issues []jira.Issue) error {
+func RenderIssuesList(issues []jira.Issue) error {
 	IssuesList.Reset()
 	// Details.Clear()
 
@@ -104,7 +104,7 @@ func UpdateIssuesList(issues []jira.Issue) error {
 	return IssuesList.SetItems(data)
 }
 
-func UpdateStatusesList(issues []jira.Issue) error {
+func RenderStatusesList(issues []jira.Issue) error {
 	StatusesList.Reset()
 
 	if len(issues) == 0 {
@@ -144,8 +144,6 @@ func ChangeView(g *ui.Gui, v *ui.View) error {
 		ProjectsList.Focus(g)
 		IssuesList.Unfocus()
 	}
-
-	g.SelFgColor = ui.ColorGreen | ui.AttrBold
 
 	return nil
 }
@@ -224,13 +222,28 @@ func FetchIssues(g *ui.Gui, code string) error {
 			IssuesList.Clear()
 		}
 
-		if err := UpdateIssuesList(issues); err != nil {
-			log.Println("Error on UpdateIssues", err)
+		if err := RenderIssuesList(issues); err != nil {
+			log.Println("Error on RenderIssues", err)
 			return err
 		}
 
-		if err := UpdateStatusesList(issues); err != nil {
-			log.Println("Error on UpdateStatuses", err)
+		return nil
+	})
+
+	return nil
+}
+
+func FetchStatuses(g *ui.Gui, code string) error {
+	StatusesList.Title = " Projects > Statuses | Fetching... "
+	g.Update(func(g *ui.Gui) error {
+		issues, err := ListIssuesByProjectCode(code)
+		if err != nil {
+			StatusesList.Title = " Projects > Statuses | Fetched failed "
+			StatusesList.Clear()
+		}
+
+		if err := RenderStatusesList(issues); err != nil {
+			log.Println("Error on RenderStatuses", err)
 			return err
 		}
 
@@ -249,15 +262,35 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 
 	IssuesList.Clear()
 
+	// err := createStatusView(g)
+	// if err != nil {
+	// 	log.Panicln("Error on createStatusView()", err)
+	// }
+
 	err := FetchIssues(g, currentItem.(string))
 
 	return err
 }
 
 func OnEnter(g *ui.Gui, v *ui.View) error {
-	err := OnSelectProject(g, v)
+	currentItem := ProjectsList.CurrentItem()
+	if currentItem == nil {
+		return nil
+	}
 
-	return err
+	if ProjectsList.IsEmpty() {
+
+		err := OnSelectProject(g, v)
+		return err
+	}
+
+	if err := createStatusView(g); err == nil {
+		err := FetchStatuses(g, currentItem.(string))
+
+		return err
+	}
+
+	return nil
 }
 
 func MakeProjectTabNames(name string) string {
