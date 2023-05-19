@@ -41,6 +41,9 @@ func keybindings(g *ui.Gui) error {
 	if err := g.SetKeybinding(StatusesView, 'k', ui.ModNone, ListUp); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
+	if err := g.SetKeybinding(StatusesView, ui.KeySpace, ui.ModNone, ToggleStatus); err != nil {
+		log.Fatal("Failed to set keybindings", err)
+	}
 
 	// ISSUES VIEW
 	if err := g.SetKeybinding(IssuesView, 'j', ui.ModNone, ListDown); err != nil {

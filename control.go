@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
 	ui "github.com/awesome-gocui/gocui"
+	viper "github.com/spf13/viper"
 )
 
 func CreateStatusView(g *ui.Gui) error {
@@ -104,6 +106,29 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 			log.Panicln("Error on createStatusView()", err)
 		}
 	}
+
+	return nil
+}
+
+func ToggleStatus(g *ui.Gui, v *ui.View) error {
+	currentItem := StatusesList.CurrentItem()
+	if currentItem == nil {
+		return nil
+	}
+
+	projectCode := IssuesList.code
+
+	value := currentItem.(string)[4:]
+
+	log.Println("value", value)
+	log.Println("project", projectCode)
+
+	path := fmt.Sprintf("savedProjects.%s.statuses.%s", projectCode, value)
+
+	viper.Set(path, true)
+	viper.WriteConfig()
+
+	// err := FetchIssues(g, projectCode)
 
 	return nil
 }
