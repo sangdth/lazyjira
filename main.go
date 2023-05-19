@@ -4,6 +4,8 @@ import (
 	"log"
 
 	ui "github.com/awesome-gocui/gocui"
+	fsnotify "github.com/fsnotify/fsnotify"
+	viper "github.com/spf13/viper"
 )
 
 const (
@@ -58,7 +60,15 @@ func main() {
 		if err := LoadProjects(v); err != nil {
 			log.Panicln("Error while loading projects", err)
 		}
+
 		return nil
+	})
+
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		g.Update(func(g *ui.Gui) error {
+			LoadProjects(v)
+			return nil
+		})
 	})
 
 	v, err = g.SetView(IssuesView, 0, th-rh+1, rw, th-3, 0)

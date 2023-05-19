@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	// fsnotify "github.com/fsnotify/fsnotify"
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
 	ui "github.com/awesome-gocui/gocui"
 	viper "github.com/spf13/viper"
@@ -38,6 +39,20 @@ func InitConfig() error {
 		log.Panicln(err)
 	}
 
+	if !viper.IsSet("savedProjects") {
+		savedProjects := map[string]map[string]interface{}{
+			ASSIGNED_TO_ME: {
+				"statuses": nil,
+			},
+		}
+
+		// TODO Still dont know how to reload after the first initial
+		viper.Set("savedProjects", savedProjects)
+		viper.WriteConfig()
+	}
+
+	viper.WatchConfig()
+
 	return nil
 }
 
@@ -54,7 +69,13 @@ func GetJiraCredentials() (string, string, string, error) {
 }
 
 func GetSavedProjects() []string {
-	projects := viper.GetStringSlice("savedProjects")
+	var projects []string
+
+	stringMap := viper.GetStringMap("savedProjects")
+
+	for key := range stringMap {
+		projects = append(projects, strings.ToUpper(key))
+	}
 
 	return projects
 }
@@ -108,10 +129,10 @@ func RenderStatusesList(issues []jira.Issue) error {
 	StatusesList.Reset()
 
 	if len(issues) == 0 {
+		//  TODO: We need a better way to handle tab title
 		// StatusesList.SetTitle(fmt.Sprintf("No issues in %v", "FF"))
 		return nil
 	}
-	// IssuesList.SetTitle(fmt.Sprintf("Issues from: %v", "FF"))
 
 	statusesMap := make(map[string]bool)
 	for _, issue := range issues {
@@ -121,97 +142,12 @@ func RenderStatusesList(issues []jira.Issue) error {
 	index := 0
 	data := make([]interface{}, len(statusesMap))
 	for status := range statusesMap {
-		// row := fmt.Sprintf("%-2s %s", key, value)
-		data[index] = status
+		row := fmt.Sprintf(" %s", status) //  <-- for unchecked
+		data[index] = row
 		index++
 	}
 
 	return StatusesList.SetItems(data)
-}
-
-func ChangeView(g *ui.Gui, v *ui.View) error {
-	switch v.Name() {
-
-	case ProjectsView:
-		if v == ProjectsList.View {
-			ProjectsList.Unfocus()
-		}
-		if strings.Contains(IssuesList.Title, "bookmarks") {
-			g.SelFgColor = ui.ColorMagenta | ui.AttrBold
-		}
-
-		IssuesList.Focus(g)
-	case IssuesView:
-		ProjectsList.Focus(g)
-		IssuesList.Unfocus()
-	}
-
-	return nil
-}
-
-func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
-	switch v.Name() {
-
-	case StatusesView:
-		ProjectsList.Focus(g)
-		StatusesList.Unfocus()
-		g.DeleteView(StatusesView)
-
-	case ProjectsView:
-		if err := createStatusView(g); err == nil {
-			OnEnter(g, v)
-			ProjectsList.Unfocus()
-			StatusesList.Focus(g)
-		} else {
-			log.Panicln("Error on createStatusView()", err)
-		}
-	}
-
-	return nil
-}
-
-func ListUp(g *ui.Gui, v *ui.View) error {
-	switch v.Name() {
-
-	case ProjectsView:
-		if err := ProjectsList.MoveUp(); err != nil {
-			log.Println("Error on ProjectsList.MoveUp()", err)
-			return err
-		}
-	case StatusesView:
-		if err := StatusesList.MoveUp(); err != nil {
-			log.Println("Error on StatusesList.MoveUp()", err)
-			return err
-		}
-	case IssuesView:
-		if err := IssuesList.MoveUp(); err != nil {
-			log.Println("Error on IssuesList.MoveUp()", err)
-			return err
-		}
-	}
-	return nil
-}
-
-func ListDown(g *ui.Gui, v *ui.View) error {
-	switch v.Name() {
-
-	case ProjectsView:
-		if err := ProjectsList.MoveDown(); err != nil {
-			log.Println("Error on SitesList.MoveDown()", err)
-			return err
-		}
-	case StatusesView:
-		if err := StatusesList.MoveDown(); err != nil {
-			log.Println("Error on StatusesList.MoveDown()", err)
-			return err
-		}
-	case IssuesView:
-		if err := IssuesList.MoveDown(); err != nil {
-			log.Println("Error on NewsList.MoveDown()", err)
-			return err
-		}
-	}
-	return nil
 }
 
 func FetchIssues(g *ui.Gui, code string) error {
@@ -254,60 +190,4 @@ func FetchStatuses(g *ui.Gui, code string) error {
 	})
 
 	return nil
-}
-
-// Pressing Spacebar will trigger this one
-func OnSelectProject(g *ui.Gui, v *ui.View) error {
-	currentItem := ProjectsList.CurrentItem()
-	if currentItem == nil {
-		return nil
-	}
-
-	IssuesList.Clear()
-
-	err := FetchIssues(g, currentItem.(string))
-
-	return err
-}
-
-func OnEnter(g *ui.Gui, v *ui.View) error {
-	currentItem := ProjectsList.CurrentItem()
-	if currentItem == nil {
-		return nil
-	}
-
-	projectCode := currentItem.(string)
-
-	if IssuesList.IsEmpty() || IssuesList.code != projectCode {
-		err := OnSelectProject(g, v)
-		if err != nil {
-			log.Println("Error on OnSelectProject", err)
-		}
-	}
-
-	if err := createStatusView(g); err == nil {
-		err := FetchStatuses(g, projectCode)
-		if err != nil {
-			log.Println("Error on FetchStatuses", err)
-		}
-	}
-
-	return nil
-}
-
-func MakeProjectTabNames(name string) string {
-	switch name {
-
-	case ProjectsView:
-		return " Projects "
-
-	case StatusesView:
-		return " Projects > Statuses "
-	}
-
-	return "Something went wrong in making name"
-}
-
-func Quit(g *ui.Gui, v *ui.View) error {
-	return ui.ErrQuit
 }

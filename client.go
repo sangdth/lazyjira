@@ -4,8 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
+)
+
+const (
+	ASSIGNED_TO_ME = "assigned to me"
 )
 
 func GetJiraClient() (*jira.Client, error) {
@@ -26,10 +31,12 @@ func GetJiraClient() (*jira.Client, error) {
 	return client, nil
 }
 
-func MakeJQL(code string) string {
+func MakeJQL(rawCode string) string {
+	code := strings.ToLower(rawCode)
+
 	switch code {
 
-	case "Assigned to me":
+	case ASSIGNED_TO_ME:
 		return "assignee=currentUser()"
 
 	default:
