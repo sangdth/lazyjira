@@ -124,20 +124,20 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 
 	projectCode := IssuesList.code
 
-	value := currentItem.(string)[4:]
+	value := currentItem.(string)
 
-	// log.Println("value", value)
-	// log.Println("project", projectCode)
+	path := fmt.Sprintf("savedprojects.%s.statuses.%s", projectCode, value)
 
-	path := fmt.Sprintf("savedProjects.%s.statuses.%s", projectCode, value)
-
-	viper.Set(path, true)
-	err := viper.WriteConfig()
-	if err != nil {
-		return err
+	if viper.IsSet(path) {
+		currentValue := viper.GetBool(path)
+		viper.Set(path, !currentValue)
+	} else {
+		viper.Set(path, true)
 	}
 
-	// err := FetchIssues(g, projectCode)
+	if err := viper.WriteConfig(); err != nil {
+		return err
+	}
 
 	return nil
 }
