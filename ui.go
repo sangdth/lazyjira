@@ -88,10 +88,10 @@ func (l *List) SetTitle(title string) {
 
 // SetItems will (re)evaluates the list's items with the given data and redraws
 // the View
-func (l *List) SetItems(data []interface{}) error {
+func (l *List) SetItems(data []interface{}) {
 	l.items = data
 	l.ResetPages()
-	return l.Draw()
+	l.Draw()
 }
 
 // AddItem appends a given item to the existing list

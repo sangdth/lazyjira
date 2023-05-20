@@ -101,6 +101,19 @@ func LoadProjects(v *ui.View) {
 	ProjectsList.SetItems(data)
 }
 
+func MakeProjectTabNames(name string) string {
+	switch name {
+
+	case ProjectsView:
+		return " Projects "
+
+	case StatusesView:
+		return " Projects > Statuses "
+	}
+
+	return "Something went wrong in making name"
+}
+
 // Make the from for project key, currently hardcoded "FF"
 func RenderIssuesList(issues []jira.Issue) error {
 	IssuesList.Reset()
@@ -123,7 +136,9 @@ func RenderIssuesList(issues []jira.Issue) error {
 		data[index] = row
 	}
 
-	return IssuesList.SetItems(data)
+	IssuesList.SetItems(data)
+
+	return nil
 }
 
 func RenderStatusesList(issues []jira.Issue) error {
@@ -148,10 +163,12 @@ func RenderStatusesList(issues []jira.Issue) error {
 		index++
 	}
 
-	return StatusesList.SetItems(data)
+	StatusesList.SetItems(data)
+
+	return nil
 }
 
-func FetchIssues(g *ui.Gui, code string) error {
+func FetchIssues(g *ui.Gui, code string) {
 	IssuesList.SetCode(code)
 	IssuesList.Title = " Issues | Fetching... "
 
@@ -169,11 +186,9 @@ func FetchIssues(g *ui.Gui, code string) error {
 
 		return nil
 	})
-
-	return nil
 }
 
-func FetchStatuses(g *ui.Gui, code string) error {
+func FetchStatuses(g *ui.Gui, code string) {
 	StatusesList.Title = " Projects > Statuses | Fetching... "
 	g.Update(func(g *ui.Gui) error {
 		issues, err := SearchIssuesByProjectCode(code)
@@ -189,6 +204,4 @@ func FetchStatuses(g *ui.Gui, code string) error {
 
 		return nil
 	})
-
-	return nil
 }

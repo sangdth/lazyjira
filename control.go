@@ -151,9 +151,9 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 
 	IssuesList.Clear()
 
-	err := FetchIssues(g, currentItem.(string))
+	FetchIssues(g, currentItem.(string))
 
-	return err
+	return nil
 }
 
 func OnEnter(g *ui.Gui, v *ui.View) error {
@@ -172,26 +172,10 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 	}
 
 	if err := CreateStatusView(g); err == nil {
-		err := FetchStatuses(g, projectCode)
-		if err != nil {
-			log.Println("Error on FetchStatuses", err)
-		}
+		FetchStatuses(g, projectCode)
 	}
 
 	return nil
-}
-
-func MakeProjectTabNames(name string) string {
-	switch name {
-
-	case ProjectsView:
-		return " Projects "
-
-	case StatusesView:
-		return " Projects > Statuses "
-	}
-
-	return "Something went wrong in making name"
 }
 
 func Quit(g *ui.Gui, v *ui.View) error {
