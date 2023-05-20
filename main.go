@@ -54,7 +54,8 @@ func main() {
 	ProjectsList.Focus(g)
 
 	g.Update(func(g *ui.Gui) error {
-		LoadProjects(v)
+		LoadProjects()
+
 		return nil
 	})
 

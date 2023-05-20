@@ -72,7 +72,7 @@ func GetJiraCredentials() (string, string, string, error) {
 func GetSavedProjects() []string {
 	var projects []string
 
-	stringMap := viper.GetStringMap("savedProjects")
+	stringMap := viper.GetStringMap("savedprojects")
 
 	for key := range stringMap {
 		projects = append(projects, strings.ToUpper(key))
@@ -112,7 +112,7 @@ func SetNewStatusesByProjectCode(code string, value []interface{}) error {
 	return nil
 }
 
-func LoadProjects(v *ui.View) {
+func LoadProjects() {
 	ProjectsList.SetTitle(makeTabNames(ProjectsView))
 
 	savedProjects := GetSavedProjects()
@@ -175,7 +175,7 @@ func RenderStatusesList(statuses []jira.Status) error {
 
 	data := make([]interface{}, len(statuses))
 	for index, status := range statuses {
-		data[index] = status.Name
+		data[index] = strings.ToLower(status.Name)
 	}
 
 	StatusesList.SetItems(data)

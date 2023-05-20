@@ -67,6 +67,64 @@ func ClosePrompt(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
+func SubmitPrompt(g *ui.Gui, v *ui.View) error {
+	code := strings.TrimSpace(v.ViewBuffer())
+	if len(code) == 0 {
+		return nil
+	}
+
+	g.Update(func(g *ui.Gui) error {
+		path := fmt.Sprintf("savedprojects.%s", code)
+
+		if viper.IsSet(path) {
+			log.Println("Project already exists")
+			return nil
+		} else {
+			statuses, err := SearchStatusesByProjectCode(code)
+			if err != nil {
+				return err
+			}
+
+			convertedStatuses := make(map[string]bool, len(statuses))
+			for _, status := range statuses {
+				convertedStatuses[strings.ToLower(status.Name)] = true
+			}
+
+			// TODO: How to overcome this stupid? How to write only new thingss?
+			oldValues := viper.GetStringMap("savedprojects")
+			newValue := map[string]interface{}{
+				code: map[string]interface{}{
+					"statuses": convertedStatuses,
+				},
+			}
+
+			for k, v := range oldValues {
+				newValue[k] = v
+			}
+
+			viper.Set("savedprojects", newValue)
+
+			if err := viper.WriteConfig(); err != nil {
+				return err
+			}
+		}
+
+		if err := deletePromptView(g); err != nil {
+			log.Println("Error on deletePromptView", err)
+			return err
+		}
+
+		ProjectsList.Focus(g)
+
+		// TODO: Still dont know why Viper can only get the latest set
+		LoadProjects()
+
+		return nil
+	})
+
+	return nil
+}
+
 func ListUp(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
