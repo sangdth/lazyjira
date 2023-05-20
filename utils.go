@@ -149,16 +149,12 @@ func RenderIssuesList(issues []jira.Issue) error {
 	IssuesList.Reset()
 
 	if len(issues) == 0 {
-		IssuesList.SetTitle(fmt.Sprintf("No issues in %v", "FF"))
+		IssuesList.SetTitle(fmt.Sprintf("No issues in %s", "FF"))
 		return nil
 	}
-	IssuesList.SetTitle(fmt.Sprintf("Issues from: %v", "FF"))
 
 	data := make([]interface{}, len(issues))
 	for index, issue := range issues {
-		// if _, ok := eventInBookmarks(e); ok {
-		// 	e.Title = fmt.Sprintf("  %v", e.Title)
-		// }
 		key := issue.Key
 		summary := issue.Fields.Summary
 		row := fmt.Sprintf("%-2s %s", key, summary)
@@ -193,46 +189,36 @@ func RenderStatusesList(statuses []jira.Status) error {
 
 func FetchIssues(g *ui.Gui, code string) error {
 	IssuesList.SetCode(code)
-	IssuesList.Title = " Issues | Fetching... "
 
-	g.Update(func(g *ui.Gui) error {
-		issues, err := SearchIssuesByProjectCode(code)
+	issues, err := SearchIssuesByProjectCode(code)
 
-		if err != nil {
-			IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %s ", code)
-			IssuesList.Clear()
-			return err
-		}
+	if err != nil {
+		IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %s ", code)
+		IssuesList.Clear()
+		return err
+	}
 
-		if err := RenderIssuesList(issues); err != nil {
-			return err
-		}
-
-		return nil
-	})
+	if err := RenderIssuesList(issues); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func FetchStatuses(g *ui.Gui, code string) error {
 	StatusesList.SetCode(code)
-	ProjectsList.Title = " Projects > Statuses | Fetching... "
 
-	g.Update(func(g *ui.Gui) error {
-		statuses, err := SearchStatusesByProjectCode(code)
-		if err != nil {
-			StatusesList.Title = " Projects > Statuses | Fetched failed "
-			StatusesList.Clear()
-			return err
-		}
+	statuses, err := SearchStatusesByProjectCode(code)
+	if err != nil {
+		StatusesList.Title = " Projects > Statuses | Fetched failed "
+		StatusesList.Clear()
+		return err
+	}
 
-		if err := RenderStatusesList(statuses); err != nil {
-			log.Println("Error on RenderStatuses")
-			return err
-		}
-
-		return nil
-	})
+	if err := RenderStatusesList(statuses); err != nil {
+		log.Println("Error on RenderStatuses")
+		return err
+	}
 
 	return nil
 }

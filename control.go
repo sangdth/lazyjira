@@ -149,13 +149,23 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 
 	IssuesList.Clear()
 
-	if err := FetchIssues(g, currentItem.(string)); err != nil {
-		return err
-	}
+	IssuesList.Title = " Issues | Fetching... "
+
+	// Can not nest the update
+	g.Update(func(g *ui.Gui) error {
+		if err := FetchIssues(g, currentItem.(string)); err != nil {
+			return err
+		}
+
+		IssuesList.Title = " Issues "
+
+		return nil
+	})
 
 	return nil
 }
 
+// When pressing Enter, the Issues list might be empty, so we need to fetch it again
 func OnEnter(g *ui.Gui, v *ui.View) error {
 	currentItem := ProjectsList.CurrentItem()
 	if currentItem == nil {
@@ -164,25 +174,35 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 
 	projectCode := currentItem.(string)
 
-	if IssuesList.IsEmpty() || IssuesList.code != projectCode {
-		if err := OnSelectProject(g, v); err != nil {
-			return err
-		}
-	}
-
 	if err := CreateStatusView(g); err != nil {
 		return err
 	}
 
-	oldStatuses := GetSavedStatusesByProjectCode(projectCode)
-	if len(oldStatuses) > 0 {
-		StatusesList.SetItems(oldStatuses)
-		return nil
-	} else {
-		if err := FetchStatuses(g, projectCode); err != nil {
-			return err
+	IssuesList.Title = " Issues | Fetching... "
+	StatusesList.Title = " Projects > Statuses | Fetching... "
+
+	// Can not nest the update
+	g.Update(func(g *ui.Gui) error {
+		if IssuesList.IsEmpty() || IssuesList.code != projectCode {
+			if err := FetchIssues(g, projectCode); err != nil {
+				return err
+			}
 		}
-	}
+
+		oldStatuses := GetSavedStatusesByProjectCode(projectCode)
+		if len(oldStatuses) > 0 {
+			StatusesList.SetItems(oldStatuses)
+		} else {
+			if err := FetchStatuses(g, projectCode); err != nil {
+				return err
+			}
+		}
+
+		IssuesList.Title = " Issues "
+		StatusesList.SetTitle(" Projects > Statuses ")
+
+		return nil
+	})
 
 	return nil
 }
