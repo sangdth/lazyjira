@@ -34,6 +34,7 @@ func createPromptView(g *ui.Gui, title string) error {
 		return err
 	}
 	v.Editable = true
+	v.Title = title
 
 	g.Cursor = true
 	_, err = g.SetCurrentView(PromptView)

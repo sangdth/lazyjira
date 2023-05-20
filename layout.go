@@ -31,7 +31,7 @@ func layout(g *ui.Gui) error {
 	}
 
 	if _, err = g.View(PromptView); err == nil {
-		_, err = g.SetView(PromptView, tw/6, (th/2)-1, (tw*5)/6, (th/2)+1, 0)
+		_, err = g.SetView(PromptView, tw/6, (th/2)-10, (tw*5)/6, (th/2)-8, 0)
 		if err != nil && err != ui.ErrUnknownView {
 			return err
 		}
