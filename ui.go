@@ -29,9 +29,6 @@ type List struct {
 func CreateList(v *ui.View, ordered bool) *List {
 	list := &List{}
 	list.View = v
-	list.SelBgColor = ui.ColorBlack
-	// list.SelFgColor = ui.ColorGreen | ui.AttrBold
-	// list.FrameColor = ui.ColorGreen
 	list.Autoscroll = true
 	list.ordered = ordered
 
@@ -47,7 +44,9 @@ func (l *List) IsEmpty() bool {
 func (l *List) Focus(g *ui.Gui) {
 	l.Highlight = true
 	l.SelFgColor = ui.ColorGreen | ui.AttrBold
+	l.SelBgColor = ui.ColorBlack
 	l.FrameColor = ui.ColorGreen
+	l.TitleColor = ui.ColorGreen
 	_, err := g.SetCurrentView(l.Name())
 	if err != nil {
 		log.Panicln("Error on SetCurrentView", err)
@@ -91,7 +90,10 @@ func (l *List) SetTitle(title string) {
 func (l *List) SetItems(data []interface{}) {
 	l.items = data
 	l.ResetPages()
-	l.Draw()
+	err := l.Draw()
+	if err != nil {
+		log.Panicln("Error on SetItems", err)
+	}
 }
 
 // AddItem appends a given item to the existing list

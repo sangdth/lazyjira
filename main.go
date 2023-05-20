@@ -34,9 +34,7 @@ func main() {
 
 	defer g.Close()
 
-	g.SelFgColor = ui.ColorGreen | ui.AttrBold
 	g.Cursor = false
-	g.Highlight = true
 
 	// Set up the main screen and keybindings
 	g.SetManagerFunc(layout)
@@ -53,12 +51,11 @@ func main() {
 		log.Panicln("Failed to create view", err)
 	}
 	ProjectsList = CreateList(v, false)
-	ProjectsList.Title = MakeProjectTabNames(ProjectsView)
+	ProjectsList.Title = makeTabNames(ProjectsView)
 	ProjectsList.Focus(g)
 
 	g.Update(func(g *ui.Gui) error {
 		LoadProjects(v)
-
 		return nil
 	})
 

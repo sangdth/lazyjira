@@ -18,7 +18,7 @@ func CreateStatusView(g *ui.Gui) error {
 		return err
 	}
 	StatusesList = CreateList(v, false)
-	StatusesList.Title = MakeProjectTabNames(StatusesView)
+	StatusesList.Title = makeTabNames(StatusesView)
 
 	_, err = g.SetCurrentView(StatusesView)
 

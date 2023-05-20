@@ -83,7 +83,7 @@ func GetSavedProjects() []string {
 }
 
 func LoadProjects(v *ui.View) {
-	ProjectsList.SetTitle(MakeProjectTabNames(ProjectsView))
+	ProjectsList.SetTitle(makeTabNames(ProjectsView))
 
 	savedProjects := GetSavedProjects()
 
@@ -101,7 +101,7 @@ func LoadProjects(v *ui.View) {
 	ProjectsList.SetItems(data)
 }
 
-func MakeProjectTabNames(name string) string {
+func makeTabNames(name string) string {
 	switch name {
 
 	case ProjectsView:
