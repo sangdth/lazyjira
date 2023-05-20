@@ -9,7 +9,7 @@ import (
 	viper "github.com/spf13/viper"
 )
 
-func CreateStatusView(g *ui.Gui) error {
+func createStatusView(g *ui.Gui) error {
 	_, th := g.Size()
 	rw, rh := relativeSize(g)
 
@@ -23,6 +23,47 @@ func CreateStatusView(g *ui.Gui) error {
 	_, err = g.SetCurrentView(StatusesView)
 
 	return err
+}
+
+// createPromptView creates a general purpose view to be used as input source
+// from the user
+func createPromptView(g *ui.Gui, title string) error {
+	tw, th := g.Size()
+	v, err := g.SetView(PromptView, tw/6, (th/2)-1, (tw*5)/6, (th/2)+1, 0)
+	if err != nil && err != ui.ErrUnknownView {
+		return err
+	}
+	v.Editable = true
+
+	g.Cursor = true
+	_, err = g.SetCurrentView(PromptView)
+
+	return err
+}
+
+// deletePromptView deletes the current prompt view
+func deletePromptView(g *ui.Gui) error {
+	g.Cursor = false
+	return g.DeleteView(PromptView)
+}
+
+func AddProject(g *ui.Gui, v *ui.View) error {
+	if err := createPromptView(g, "New project code:"); err != nil {
+		log.Panicln("Error on createPromptView", err)
+	}
+
+	return nil
+}
+
+func ClosePrompt(g *ui.Gui, v *ui.View) error {
+	ProjectsList.Focus(g)
+
+	if err := deletePromptView(g); err != nil {
+		log.Println("Error on deletePromptView", err)
+		return err
+	}
+
+	return nil
 }
 
 func ListUp(g *ui.Gui, v *ui.View) error {
@@ -52,17 +93,17 @@ func ListDown(g *ui.Gui, v *ui.View) error {
 
 	case ProjectsView:
 		if err := ProjectsList.MoveDown(); err != nil {
-			log.Println("Error on SitesList.MoveDown()", err)
+			log.Println("Error on SitesList", err)
 			return err
 		}
 	case StatusesView:
 		if err := StatusesList.MoveDown(); err != nil {
-			log.Println("Error on StatusesList.MoveDown()", err)
+			log.Println("Error on StatusesList", err)
 			return err
 		}
 	case IssuesView:
 		if err := IssuesList.MoveDown(); err != nil {
-			log.Println("Error on NewsList.MoveDown()", err)
+			log.Println("Error on IssuesList", err)
 			return err
 		}
 	}
@@ -100,7 +141,7 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 		}
 
 	case ProjectsView:
-		if err := CreateStatusView(g); err == nil {
+		if err := createStatusView(g); err == nil {
 			if err := OnEnter(g, v); err != nil {
 				return err
 			}
@@ -174,7 +215,7 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 
 	projectCode := currentItem.(string)
 
-	if err := CreateStatusView(g); err != nil {
+	if err := createStatusView(g); err != nil {
 		return err
 	}
 

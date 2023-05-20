@@ -12,6 +12,9 @@ func keybindings(g *ui.Gui) error {
 	}
 
 	// PROJECTS VIEW
+	if err := g.SetKeybinding(ProjectsView, 'a', ui.ModNone, AddProject); err != nil {
+		log.Fatal("Failed to set keybindings", err)
+	}
 	if err := g.SetKeybinding(ProjectsView, 'j', ui.ModNone, ListDown); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
@@ -35,6 +38,9 @@ func keybindings(g *ui.Gui) error {
 	if err := g.SetKeybinding(StatusesView, 'b', ui.ModNone, SwitchProjectTab); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
+	if err := g.SetKeybinding(StatusesView, ui.KeyEsc, ui.ModNone, SwitchProjectTab); err != nil {
+		log.Fatal("Failed to set keybindings", err)
+	}
 	if err := g.SetKeybinding(StatusesView, 'j', ui.ModNone, ListDown); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
@@ -42,6 +48,10 @@ func keybindings(g *ui.Gui) error {
 		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(StatusesView, ui.KeySpace, ui.ModNone, ToggleStatus); err != nil {
+		log.Fatal("Failed to set keybindings", err)
+	}
+
+	if err := g.SetKeybinding(PromptView, ui.KeyEsc, ui.ModNone, ClosePrompt); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
 

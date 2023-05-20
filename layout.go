@@ -25,8 +25,15 @@ func layout(g *ui.Gui) error {
 
 	if _, err := g.View(StatusesView); err == nil {
 		_, err = g.SetView(StatusesView, 0, 0, rw, th-rh, 0)
-		if err != nil {
-			log.Panicln("Cannot update view", err)
+		if err != nil && err != ui.ErrUnknownView {
+			return err
+		}
+	}
+
+	if _, err = g.View(PromptView); err == nil {
+		_, err = g.SetView(PromptView, tw/6, (th/2)-1, (tw*5)/6, (th/2)+1, 0)
+		if err != nil && err != ui.ErrUnknownView {
+			return err
 		}
 	}
 

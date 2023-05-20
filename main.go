@@ -12,6 +12,7 @@ const (
 	StatusesView = "statuses"
 	IssuesView   = "issues"
 	DetailsView  = "details"
+	PromptView   = "prompt"
 )
 
 var (
