@@ -95,16 +95,14 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 	case StatusesView:
 		ProjectsList.Focus(g)
 		StatusesList.Unfocus()
-		err := g.DeleteView(StatusesView)
-		if err != nil {
-			log.Panicln(err)
+		if err := g.DeleteView(StatusesView); err != nil {
+			return err
 		}
 
 	case ProjectsView:
 		if err := CreateStatusView(g); err == nil {
-			err := OnEnter(g, v)
-			if err != nil {
-				log.Panicln(err)
+			if err := OnEnter(g, v); err != nil {
+				return err
 			}
 			ProjectsList.Unfocus()
 			StatusesList.Focus(g)
@@ -176,8 +174,14 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 		return err
 	}
 
-	if err := FetchStatuses(g, projectCode); err != nil {
-		return err
+	oldStatuses := GetSavedStatusesByProjectCode(projectCode)
+	if len(oldStatuses) > 0 {
+		StatusesList.SetItems(oldStatuses)
+		return nil
+	} else {
+		if err := FetchStatuses(g, projectCode); err != nil {
+			return err
+		}
 	}
 
 	return nil

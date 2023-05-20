@@ -81,17 +81,35 @@ func GetSavedProjects() []string {
 	return projects
 }
 
-func GetSavedStatusesByProjectCode(code string) {
-	stringMap := viper.GetStringMap(fmt.Sprintf("savedProjects.%s.statuses", code))
+func GetSavedStatusesByProjectCode(code string) []interface{} {
+	stringMap := viper.GetStringMap(fmt.Sprintf("savedprojects.%s.statuses", code))
 
-	// var statuses []string
+	statuses := make([]interface{}, len(stringMap))
 
+	index := 0
 	for key := range stringMap {
-		// statuses = append(statuses, key)
-		log.Println(key)
+		statuses[index] = key
+		index++
 	}
 
-	// return statuses
+	return statuses
+}
+
+func SetNewStatusesByProjectCode(code string, value []interface{}) error {
+	path := fmt.Sprintf("savedprojects.%s.statuses", code)
+
+	newValue := make(map[string]interface{}, len(value))
+	for _, status := range value {
+		newValue[status.(string)] = true
+	}
+
+	viper.Set(path, newValue)
+
+	if err := viper.WriteConfig(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func LoadProjects(v *ui.View) {
@@ -129,7 +147,6 @@ func makeTabNames(name string) string {
 // Make the from for project key, currently hardcoded "FF"
 func RenderIssuesList(issues []jira.Issue) error {
 	IssuesList.Reset()
-	// Details.Clear()
 
 	if len(issues) == 0 {
 		IssuesList.SetTitle(fmt.Sprintf("No issues in %v", "FF"))
@@ -167,6 +184,10 @@ func RenderStatusesList(statuses []jira.Status) error {
 
 	StatusesList.SetItems(data)
 
+	if err := SetNewStatusesByProjectCode(StatusesList.code, data); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -194,7 +215,8 @@ func FetchIssues(g *ui.Gui, code string) error {
 }
 
 func FetchStatuses(g *ui.Gui, code string) error {
-	StatusesList.Title = " Projects > Statuses | Fetching... "
+	StatusesList.SetCode(code)
+	ProjectsList.Title = " Projects > Statuses | Fetching... "
 
 	g.Update(func(g *ui.Gui) error {
 		statuses, err := SearchStatusesByProjectCode(code)
