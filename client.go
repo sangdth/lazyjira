@@ -58,3 +58,24 @@ func SearchIssuesByProjectCode(projectCode string) ([]jira.Issue, error) {
 
 	return issues, nil
 }
+
+func SearchStatusesByProjectCode(projectCode string) ([]jira.Status, error) {
+	issues, err := SearchIssuesByProjectCode(projectCode)
+	if err != nil {
+		return nil, err
+	}
+
+	statusesMap := make(map[string]*jira.Status)
+	for _, issue := range issues {
+		statusesMap[issue.Fields.Status.Name] = issue.Fields.Status
+	}
+
+	index := 0
+	statuses := make([]jira.Status, len(statusesMap))
+	for _, value := range statusesMap {
+		statuses[index] = *value
+		index++
+	}
+
+	return statuses, nil
+}

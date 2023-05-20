@@ -151,7 +151,9 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 
 	IssuesList.Clear()
 
-	FetchIssues(g, currentItem.(string))
+	if err := FetchIssues(g, currentItem.(string)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -165,14 +167,17 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 	projectCode := currentItem.(string)
 
 	if IssuesList.IsEmpty() || IssuesList.code != projectCode {
-		err := OnSelectProject(g, v)
-		if err != nil {
-			log.Println("Error on OnSelectProject", err)
+		if err := OnSelectProject(g, v); err != nil {
+			return err
 		}
 	}
 
-	if err := CreateStatusView(g); err == nil {
-		FetchStatuses(g, projectCode)
+	if err := CreateStatusView(g); err != nil {
+		return err
+	}
+
+	if err := FetchStatuses(g, projectCode); err != nil {
+		return err
 	}
 
 	return nil

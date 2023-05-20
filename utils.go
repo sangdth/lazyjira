@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	// fsnotify "github.com/fsnotify/fsnotify"
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
 	ui "github.com/awesome-gocui/gocui"
 	viper "github.com/spf13/viper"
@@ -82,6 +81,19 @@ func GetSavedProjects() []string {
 	return projects
 }
 
+func GetSavedStatusesByProjectCode(code string) {
+	stringMap := viper.GetStringMap(fmt.Sprintf("savedProjects.%s.statuses", code))
+
+	// var statuses []string
+
+	for key := range stringMap {
+		// statuses = append(statuses, key)
+		log.Println(key)
+	}
+
+	// return statuses
+}
+
 func LoadProjects(v *ui.View) {
 	ProjectsList.SetTitle(makeTabNames(ProjectsView))
 
@@ -141,26 +153,16 @@ func RenderIssuesList(issues []jira.Issue) error {
 	return nil
 }
 
-func RenderStatusesList(issues []jira.Issue) error {
+func RenderStatusesList(statuses []jira.Status) error {
 	StatusesList.Reset()
 
-	if len(issues) == 0 {
-		//  TODO: We need a better way to handle tab title
-		// StatusesList.SetTitle(fmt.Sprintf("No issues in %v", "FF"))
+	if len(statuses) == 0 {
 		return nil
 	}
 
-	statusesMap := make(map[string]bool)
-	for _, issue := range issues {
-		statusesMap[issue.Fields.Status.Name] = true
-	}
-
-	index := 0
-	data := make([]interface{}, len(statusesMap))
-	for status := range statusesMap {
-		row := fmt.Sprintf(" %s", status) //  <-- for unchecked
-		data[index] = row
-		index++
+	data := make([]interface{}, len(statuses))
+	for index, status := range statuses {
+		data[index] = status.Name
 	}
 
 	StatusesList.SetItems(data)
@@ -168,40 +170,47 @@ func RenderStatusesList(issues []jira.Issue) error {
 	return nil
 }
 
-func FetchIssues(g *ui.Gui, code string) {
+func FetchIssues(g *ui.Gui, code string) error {
 	IssuesList.SetCode(code)
 	IssuesList.Title = " Issues | Fetching... "
 
 	g.Update(func(g *ui.Gui) error {
 		issues, err := SearchIssuesByProjectCode(code)
+
 		if err != nil {
-			IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %v ", code)
+			IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %s ", code)
 			IssuesList.Clear()
+			return err
 		}
 
 		if err := RenderIssuesList(issues); err != nil {
-			log.Println("Error on RenderIssues", err)
 			return err
 		}
 
 		return nil
 	})
+
+	return nil
 }
 
-func FetchStatuses(g *ui.Gui, code string) {
+func FetchStatuses(g *ui.Gui, code string) error {
 	StatusesList.Title = " Projects > Statuses | Fetching... "
+
 	g.Update(func(g *ui.Gui) error {
-		issues, err := SearchIssuesByProjectCode(code)
+		statuses, err := SearchStatusesByProjectCode(code)
 		if err != nil {
 			StatusesList.Title = " Projects > Statuses | Fetched failed "
 			StatusesList.Clear()
+			return err
 		}
 
-		if err := RenderStatusesList(issues); err != nil {
-			log.Println("Error on RenderStatuses", err)
+		if err := RenderStatusesList(statuses); err != nil {
+			log.Println("Error on RenderStatuses")
 			return err
 		}
 
 		return nil
 	})
+
+	return nil
 }
