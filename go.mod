@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/andygrunwald/go-jira/v2 v2.0.0-20230325080157-2e11dffbdb9a
 	github.com/awesome-gocui/gocui v1.1.0
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/spf13/viper v1.15.0
 	github.com/zalando/go-keyring v0.2.3
 )
@@ -13,7 +14,6 @@ require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.4.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect

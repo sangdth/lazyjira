@@ -27,7 +27,7 @@ func GetConfigHome() (string, error) {
 	return home + "/.config", nil
 }
 
-func InitConfig() error {
+func InitConfig() {
 	home, _ := GetConfigHome()
 
 	viper.SetConfigName("config")
@@ -48,12 +48,14 @@ func InitConfig() error {
 
 		// TODO Still dont know how to reload after the first initial
 		viper.Set("savedProjects", savedProjects)
-		viper.WriteConfig()
+
+		err := viper.WriteConfig()
+		if err != nil {
+			log.Panicln(err)
+		}
 	}
 
 	viper.WatchConfig()
-
-	return nil
 }
 
 func GetJiraCredentials() (string, string, string, error) {
@@ -80,7 +82,7 @@ func GetSavedProjects() []string {
 	return projects
 }
 
-func LoadProjects(v *ui.View) error {
+func LoadProjects(v *ui.View) {
 	ProjectsList.SetTitle(MakeProjectTabNames(ProjectsView))
 
 	savedProjects := GetSavedProjects()
@@ -90,14 +92,13 @@ func LoadProjects(v *ui.View) error {
 		ProjectsList.Reset()
 		IssuesList.Reset()
 		IssuesList.SetTitle("No issues")
-		return nil
 	}
 	data := make([]interface{}, len(savedProjects))
 	for index, project := range savedProjects {
 		data[index] = project
 	}
 
-	return ProjectsList.SetItems(data)
+	ProjectsList.SetItems(data)
 }
 
 // Make the from for project key, currently hardcoded "FF"
@@ -155,7 +156,7 @@ func FetchIssues(g *ui.Gui, code string) error {
 	IssuesList.Title = " Issues | Fetching... "
 
 	g.Update(func(g *ui.Gui) error {
-		issues, err := ListIssuesByProjectCode(code)
+		issues, err := SearchIssuesByProjectCode(code)
 		if err != nil {
 			IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %v ", code)
 			IssuesList.Clear()
@@ -175,7 +176,7 @@ func FetchIssues(g *ui.Gui, code string) error {
 func FetchStatuses(g *ui.Gui, code string) error {
 	StatusesList.Title = " Projects > Statuses | Fetching... "
 	g.Update(func(g *ui.Gui) error {
-		issues, err := ListIssuesByProjectCode(code)
+		issues, err := SearchIssuesByProjectCode(code)
 		if err != nil {
 			StatusesList.Title = " Projects > Statuses | Fetched failed "
 			StatusesList.Clear()

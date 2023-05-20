@@ -57,9 +57,7 @@ func main() {
 	ProjectsList.Focus(g)
 
 	g.Update(func(g *ui.Gui) error {
-		if err := LoadProjects(v); err != nil {
-			log.Panicln("Error while loading projects", err)
-		}
+		LoadProjects(v)
 
 		return nil
 	})

@@ -6,11 +6,8 @@ import (
 	ui "github.com/awesome-gocui/gocui"
 )
 
-const (
-	sideBarWidth      = 50
-	projectViewHeight = 20
-)
-
+// RelativeSize returns the relative size of the terminal window view
+// the first int is 30% of the width, the second is the 70% of the height
 func relativeSize(g *ui.Gui) (int, int) {
 	tw, th := g.Size()
 

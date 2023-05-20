@@ -95,11 +95,17 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 	case StatusesView:
 		ProjectsList.Focus(g)
 		StatusesList.Unfocus()
-		g.DeleteView(StatusesView)
+		err := g.DeleteView(StatusesView)
+		if err != nil {
+			log.Panicln(err)
+		}
 
 	case ProjectsView:
 		if err := CreateStatusView(g); err == nil {
-			OnEnter(g, v)
+			err := OnEnter(g, v)
+			if err != nil {
+				log.Panicln(err)
+			}
 			ProjectsList.Unfocus()
 			StatusesList.Focus(g)
 		} else {
@@ -120,13 +126,16 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 
 	value := currentItem.(string)[4:]
 
-	log.Println("value", value)
-	log.Println("project", projectCode)
+	// log.Println("value", value)
+	// log.Println("project", projectCode)
 
 	path := fmt.Sprintf("savedProjects.%s.statuses.%s", projectCode, value)
 
 	viper.Set(path, true)
-	viper.WriteConfig()
+	err := viper.WriteConfig()
+	if err != nil {
+		return err
+	}
 
 	// err := FetchIssues(g, projectCode)
 

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ASSIGNED_TO_ME = "assigned to me"
+	ASSIGNED_TO_ME = "assigned_to_me"
 )
 
 func GetJiraClient() (*jira.Client, error) {
@@ -44,7 +44,7 @@ func MakeJQL(rawCode string) string {
 	}
 }
 
-func ListIssuesByProjectCode(projectCode string) ([]jira.Issue, error) {
+func SearchIssuesByProjectCode(projectCode string) ([]jira.Issue, error) {
 	client, _ := GetJiraClient()
 
 	// Define JQL query

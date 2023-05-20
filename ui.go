@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 
 	ui "github.com/awesome-gocui/gocui"
 )
@@ -43,13 +44,14 @@ func (l *List) IsEmpty() bool {
 }
 
 // Focus hightlights the View of the current List
-func (l *List) Focus(g *ui.Gui) error {
+func (l *List) Focus(g *ui.Gui) {
 	l.Highlight = true
 	l.SelFgColor = ui.ColorGreen | ui.AttrBold
 	l.FrameColor = ui.ColorGreen
 	_, err := g.SetCurrentView(l.Name())
-
-	return err
+	if err != nil {
+		log.Panicln("Error on SetCurrentView", err)
+	}
 }
 
 // Unfocus is used to remove highlighting from the current list
@@ -78,9 +80,9 @@ func (l *List) SetTitle(title string) {
 	l.title = title
 
 	if l.pagesNum() > 1 {
-		l.Title = fmt.Sprintf("%d/%d - %v", l.currPageNum(), l.pagesNum(), title)
+		l.Title = fmt.Sprintf("%d/%d - %s", l.currPageNum(), l.pagesNum(), title)
 	} else {
-		l.Title = fmt.Sprintf("%v", title)
+		l.Title = title
 	}
 }
 
@@ -131,10 +133,15 @@ func (l *List) MoveDown() error {
 	if l.atBottomOfPage() {
 		y = 0
 		if l.hasMultiplePages() {
-			l.displayPage(l.nextPageIdx())
+			return l.displayPage(l.nextPageIdx())
 		}
 	}
-	return l.SetCursor(0, y)
+	err := l.SetCursor(0, y)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // MoveUp moves the cursor to the line above on the previous page if any
@@ -146,11 +153,16 @@ func (l *List) MoveUp() error {
 	if l.atTopOfPage() {
 		y = l.pages[l.prevPageIdx()].limit - 1
 		if l.hasMultiplePages() {
-			l.displayPage(l.prevPageIdx())
+			return l.displayPage(l.prevPageIdx())
 		}
 	}
 
-	return l.SetCursor(0, y)
+	err := l.SetCursor(0, y)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // MovePgDown displays the next page
@@ -158,7 +170,11 @@ func (l *List) MovePgDown() error {
 	if l.IsEmpty() {
 		return nil
 	}
-	l.displayPage(l.nextPageIdx())
+
+	err := l.displayPage(l.nextPageIdx())
+	if err != nil {
+		return err
+	}
 
 	return l.SetCursor(0, 0)
 }
@@ -168,7 +184,10 @@ func (l *List) MovePgUp() error {
 	if l.IsEmpty() {
 		return nil
 	}
-	l.displayPage(l.prevPageIdx())
+	err := l.displayPage(l.prevPageIdx())
+	if err != nil {
+		log.Panicln(err)
+	}
 
 	return l.SetCursor(0, 0)
 }
@@ -187,7 +206,10 @@ func (l *List) CurrentItem() interface{} {
 
 // ResetCursor puts the cirson back at the beginning of the View
 func (l *List) ResetCursor() {
-	l.SetCursor(0, 0)
+	err := l.SetCursor(0, 0)
+	if err != nil {
+		log.Panicln("Error in ResetCursor", err)
+	}
 }
 
 // ResetPages (re)calculates the pages data based on the current length of the
