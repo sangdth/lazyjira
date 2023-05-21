@@ -35,6 +35,8 @@ func createPromptView(g *ui.Gui, title string) error {
 	}
 	v.Editable = true
 	v.Title = title
+	v.FrameColor = ui.ColorGreen
+	v.TitleColor = ui.ColorGreen
 
 	g.Cursor = true
 	_, err = g.SetCurrentView(PromptView)
@@ -48,22 +50,66 @@ func deletePromptView(g *ui.Gui) error {
 	return g.DeleteView(PromptView)
 }
 
+// TODO: encapsulate this into a separated file like ui for List
+func createAlertView(g *ui.Gui, msg string) error {
+	tw, th := g.Size()
+	v, err := g.SetView(AlertView, tw/4, (th/2)-20, (tw*5)/4, (th/2)-2, 0)
+	if err != nil && err != ui.ErrUnknownView {
+		return err
+	}
+
+	g.Cursor = false
+	v.Editable = false
+	v.Wrap = true
+	v.FrameColor = ui.ColorRed
+	v.TitleColor = ui.ColorRed
+	v.Title = " Error  "
+	v.Subtitle = " (Press Esc to close) "
+
+	if _, err := fmt.Fprintln(v, msg); err != nil {
+		return err
+	}
+
+	_, err = g.SetCurrentView(AlertView)
+
+	return err
+}
+
+func deleteAlertView(g *ui.Gui) error {
+	g.Cursor = false
+	return g.DeleteView(AlertView)
+}
+
 func AddProject(g *ui.Gui, v *ui.View) error {
-	if err := createPromptView(g, "New project code:"); err != nil {
+	ProjectsList.Unfocus()
+
+	if err := createPromptView(g, " New project code "); err != nil {
 		log.Panicln("Error on createPromptView", err)
 	}
 
 	return nil
 }
 
-func ClosePrompt(g *ui.Gui, v *ui.View) error {
-	ProjectsList.Focus(g)
+func CloseFloatView(g *ui.Gui, v *ui.View) error {
+	switch v.Name() {
 
-	if err := deletePromptView(g); err != nil {
-		log.Println("Error on deletePromptView", err)
-		return err
+	case PromptView:
+		if err := deletePromptView(g); err != nil {
+			log.Println("Error on deletePromptView", err)
+			return err
+		}
+		ProjectsList.Focus(g)
+
+	case AlertView:
+		if err := deleteAlertView(g); err != nil {
+			log.Println("Error on deletePromptView", err)
+			return err
+		}
+
+		if _, err := g.SetCurrentView(PromptView); err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 
@@ -77,12 +123,19 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 		path := fmt.Sprintf("savedprojects.%s", code)
 
 		if viper.IsSet(path) {
-			log.Println("Project already exists")
+			// log.Println("Project already exists")
+			if err := createAlertView(g, "Project already exist"); err != nil {
+				log.Println("Failed to create AlertView", err)
+				return err
+			}
 			return nil
 		} else {
-			statuses, err := SearchStatusesByProjectCode(code)
-			if err != nil {
-				return err
+			statuses, _, jiraErr := SearchStatusesByProjectCode(code)
+			if jiraErr != nil {
+				if err := createAlertView(g, jiraErr.Error()); err != nil {
+					log.Println("Failed to create AlertView", err)
+				}
+				return nil
 			}
 
 			convertedStatuses := make(map[string]bool, len(statuses))

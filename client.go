@@ -59,10 +59,10 @@ func SearchIssuesByProjectCode(projectCode string) ([]jira.Issue, error) {
 	return issues, nil
 }
 
-func SearchStatusesByProjectCode(projectCode string) ([]jira.Status, error) {
+func SearchStatusesByProjectCode(projectCode string) ([]jira.Status, []jira.Issue, error) {
 	issues, err := SearchIssuesByProjectCode(projectCode)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	statusesMap := make(map[string]*jira.Status)
@@ -77,5 +77,5 @@ func SearchStatusesByProjectCode(projectCode string) ([]jira.Status, error) {
 		index++
 	}
 
-	return statuses, nil
+	return statuses, issues, nil
 }

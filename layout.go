@@ -18,32 +18,36 @@ func layout(g *ui.Gui) error {
 	tw, th := g.Size()
 	rw, rh := relativeSize(g)
 
-	_, err := g.SetView(ProjectsView, 0, 0, rw, th-rh, 0)
-	if err != nil {
+	if _, err := g.SetView(ProjectsView, 0, 0, rw, th-rh, 0); err != nil {
 		log.Panicln("Cannot update view", err)
 	}
 
 	if _, err := g.View(StatusesView); err == nil {
-		_, err = g.SetView(StatusesView, 0, 0, rw, th-rh, 0)
+		_, err := g.SetView(StatusesView, 0, 0, rw, th-rh, 0)
 		if err != nil && err != ui.ErrUnknownView {
 			return err
 		}
 	}
 
-	if _, err = g.View(PromptView); err == nil {
-		_, err = g.SetView(PromptView, tw/6, (th/2)-10, (tw*5)/6, (th/2)-8, 0)
+	if _, err := g.View(PromptView); err == nil {
+		_, err := g.SetView(PromptView, tw/6, (th/2)-10, (tw*5)/6, (th/2)-8, 1)
 		if err != nil && err != ui.ErrUnknownView {
 			return err
 		}
 	}
 
-	_, err = g.SetView(IssuesView, 0, th-rh+1, rw, th-3, 0)
-	if err != nil {
+	if _, err := g.View(AlertView); err == nil {
+		_, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)
+		if err != nil && err != ui.ErrUnknownView {
+			return err
+		}
+	}
+
+	if _, err := g.SetView(IssuesView, 0, th-rh+1, rw, th-3, 0); err != nil {
 		log.Panicln("Cannot update view", err)
 	}
 
-	_, err = g.SetView(DetailsView, rw+1, 0, tw-1, th-3, 0)
-	if err != nil {
+	if _, err := g.SetView(DetailsView, rw+1, 0, tw-1, th-3, 0); err != nil {
 		log.Panicln("Cannot update view", err)
 	}
 

@@ -52,10 +52,15 @@ func keybindings(g *ui.Gui) error {
 	}
 
 	// PROMPT VIEW
-	if err := g.SetKeybinding(PromptView, ui.KeyEsc, ui.ModNone, ClosePrompt); err != nil {
+	if err := g.SetKeybinding(PromptView, ui.KeyEsc, ui.ModNone, CloseFloatView); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
 	if err := g.SetKeybinding(PromptView, ui.KeyEnter, ui.ModNone, SubmitPrompt); err != nil {
+		log.Fatal("Failed to set keybindings", err)
+	}
+
+	// ALERT VIEW
+	if err := g.SetKeybinding(AlertView, ui.KeyEsc, ui.ModNone, CloseFloatView); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
 

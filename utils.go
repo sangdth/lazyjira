@@ -208,11 +208,16 @@ func FetchIssues(g *ui.Gui, code string) error {
 func FetchStatuses(g *ui.Gui, code string) error {
 	StatusesList.SetCode(code)
 
-	statuses, err := SearchStatusesByProjectCode(code)
+	statuses, _, err := SearchStatusesByProjectCode(code)
 	if err != nil {
 		StatusesList.Title = " Projects > Statuses | Fetched failed "
 		StatusesList.Clear()
-		return err
+
+		// if err := createAlertView(g, "New Alert:"); err != nil {
+		// 	log.Panicln("Error on createAlertView", err)
+		// }
+
+		return nil
 	}
 
 	if err := RenderStatusesList(statuses); err != nil {

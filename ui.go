@@ -289,7 +289,7 @@ func (l *List) prevPageIdx() int {
 // the remaining space until the border of the View
 func (l *List) displayItem(i int) string {
 	item := fmt.Sprint(l.items[i])
-	sp := spaces(l.width() - len(item) - 3)
+	sp := spaces(l.width() - len(item) + 1)
 	if l.ordered {
 		return fmt.Sprintf("%2d. %v%s", i+1, item, sp)
 	} else {
