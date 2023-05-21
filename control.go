@@ -9,6 +9,11 @@ import (
 	viper "github.com/spf13/viper"
 )
 
+var (
+	PromptDialog *Dialog
+	AlertDialog  *Dialog
+)
+
 func createStatusView(g *ui.Gui) error {
 	_, th := g.Size()
 	rw, rh := relativeSize(g)
@@ -33,15 +38,14 @@ func createPromptView(g *ui.Gui, title string) error {
 	if err != nil && err != ui.ErrUnknownView {
 		return err
 	}
-	v.Editable = true
-	v.Title = title
-	v.FrameColor = ui.ColorGreen
-	v.TitleColor = ui.ColorGreen
 
 	g.Cursor = true
-	_, err = g.SetCurrentView(PromptView)
 
-	return err
+	PromptDialog = CreateDialog(v, PROMPT)
+	PromptDialog.SetTitles(" Insert Project Code ", " (Press Esc to close) ")
+	PromptDialog.Focus(g)
+
+	return nil
 }
 
 // deletePromptView deletes the current prompt view
@@ -53,26 +57,19 @@ func deletePromptView(g *ui.Gui) error {
 // TODO: encapsulate this into a separated file like ui for List
 func createAlertView(g *ui.Gui, msg string) error {
 	tw, th := g.Size()
-	v, err := g.SetView(AlertView, tw/4, (th/2)-20, (tw*5)/4, (th/2)-2, 0)
+	v, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)
 	if err != nil && err != ui.ErrUnknownView {
 		return err
 	}
 
 	g.Cursor = false
-	v.Editable = false
-	v.Wrap = true
-	v.FrameColor = ui.ColorRed
-	v.TitleColor = ui.ColorRed
-	v.Title = " Error  "
-	v.Subtitle = " (Press Esc to close) "
 
-	if _, err := fmt.Fprintln(v, msg); err != nil {
-		return err
-	}
+	AlertDialog = CreateDialog(v, ALERT)
+	AlertDialog.SetTitles(" Error! ", " (Press Esc to close) ")
+	AlertDialog.SetContent(msg)
+	AlertDialog.Focus(g)
 
-	_, err = g.SetCurrentView(AlertView)
-
-	return err
+	return nil
 }
 
 func deleteAlertView(g *ui.Gui) error {
@@ -105,10 +102,9 @@ func CloseFloatView(g *ui.Gui, v *ui.View) error {
 			log.Println("Error on deletePromptView", err)
 			return err
 		}
+		PromptDialog.Focus(g)
+		g.Cursor = true
 
-		if _, err := g.SetCurrentView(PromptView); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -123,10 +119,8 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 		path := fmt.Sprintf("savedprojects.%s", code)
 
 		if viper.IsSet(path) {
-			// log.Println("Project already exists")
 			if err := createAlertView(g, "Project already exist"); err != nil {
 				log.Println("Failed to create AlertView", err)
-				return err
 			}
 			return nil
 		} else {

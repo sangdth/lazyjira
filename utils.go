@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -226,4 +227,12 @@ func FetchStatuses(g *ui.Gui, code string) error {
 	}
 
 	return nil
+}
+
+func spaces(n int) string {
+	var s bytes.Buffer
+	for i := 0; i < n; i++ {
+		s.WriteString(" ")
+	}
+	return s.String()
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 
@@ -325,12 +324,4 @@ func (l *List) atTopOfPage() bool {
 // hasMultiplePages determines whether there is more than one page to be displayed
 func (l *List) hasMultiplePages() bool {
 	return l.pagesNum() > 1
-}
-
-func spaces(n int) string {
-	var s bytes.Buffer
-	for i := 0; i < n; i++ {
-		s.WriteString(" ")
-	}
-	return s.String()
 }
