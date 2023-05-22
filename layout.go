@@ -14,6 +14,9 @@ func relativeSize(g *ui.Gui) (int, int) {
 	return (tw * 3) / 10, (th * 7) / 10
 }
 
+// TODO: Make helpers that do all the calculation like
+// center vertically and horizontally (similar to margin auto in css)
+// maybe something display flex could be great he he
 func layout(g *ui.Gui) error {
 	tw, th := g.Size()
 	rw, rh := relativeSize(g)
@@ -30,7 +33,7 @@ func layout(g *ui.Gui) error {
 	}
 
 	if _, err := g.View(PromptView); err == nil {
-		_, err := g.SetView(PromptView, tw/6, (th/2)-10, (tw*5)/6, (th/2)-8, 1)
+		_, err := g.SetView(PromptView, tw/6, (th/2)-8, (tw*5)/6, (th/2)-6, 0)
 		if err != nil && err != ui.ErrUnknownView {
 			return err
 		}

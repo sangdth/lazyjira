@@ -14,9 +14,12 @@ import (
 )
 
 const (
-	PROJECT_NAME     = "lazyjira"
-	helpLink         = "https://github.com/sangdth/lazyjira#getting-started"
-	jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
+	PROJECT_NAME = "lazyjira"
+	PROJECTS     = "projects"
+	SERVER       = "server"
+	USERNAME     = "username"
+	HELP_LINK    = "https://github.com/sangdth/lazyjira#getting-started"
+	JIRA_LINK    = "https://id.atlassian.com/manage-profile/security/api-tokens"
 )
 
 func GetConfigHome() (string, error) {
@@ -48,13 +51,13 @@ func InitConfig() error {
 				log.Panicln("Error while initiating config file", err)
 			}
 
-			// InitConfigValue() // can NOT work, why???
+			InitConfigValue() // can NOT work, why???
 			// panic: runtime error: invalid memory address or nil pointer dereference
 			// [signal SIGSEGV: segmentation violation code=0x2 addr=0x0 pc=0x1030fa664
 		}
 	}
 
-	if !viper.IsSet("savedprojects") {
+	if !viper.IsSet(PROJECTS) {
 		savedProjects := map[string]map[string]interface{}{
 			ASSIGNED_TO_ME: {
 				"statuses": nil,
@@ -62,10 +65,10 @@ func InitConfig() error {
 		}
 
 		// TODO Still dont know how to reload after the first initial
-		viper.Set("savedprojects", savedProjects)
+		viper.Set(PROJECTS, savedProjects)
 
 		if err := viper.WriteConfig(); err != nil {
-			log.Panicln("Error while setting default savedprojects", err)
+			log.Panicln("Error while setting default saved projects", err)
 		}
 	}
 
@@ -75,8 +78,8 @@ func InitConfig() error {
 }
 
 func GetJiraCredentials() (string, string, string, error) {
-	server := viper.GetString("server")
-	username := viper.GetString("username")
+	server := viper.GetString(SERVER)
+	username := viper.GetString(USERNAME)
 
 	secret, err := keyring.Get(PROJECT_NAME, username)
 	if err != nil {
@@ -89,7 +92,7 @@ func GetJiraCredentials() (string, string, string, error) {
 func GetSavedProjects() []string {
 	var projects []string
 
-	stringMap := viper.GetStringMap("savedprojects")
+	stringMap := viper.GetStringMap(PROJECTS)
 
 	for key := range stringMap {
 		projects = append(projects, strings.ToUpper(key))
@@ -99,7 +102,7 @@ func GetSavedProjects() []string {
 }
 
 func GetSavedStatusesByProjectCode(code string) []interface{} {
-	stringMap := viper.GetStringMap(fmt.Sprintf("savedprojects.%s.statuses", code))
+	stringMap := viper.GetStringMap(fmt.Sprintf("%s.%s.statuses", PROJECTS, code))
 
 	statuses := make([]interface{}, len(stringMap))
 
@@ -113,7 +116,7 @@ func GetSavedStatusesByProjectCode(code string) []interface{} {
 }
 
 func SetNewStatusesByProjectCode(code string, value []interface{}) error {
-	path := fmt.Sprintf("savedprojects.%s.statuses", code)
+	path := fmt.Sprintf("%s.%s.statuses", PROJECTS, code)
 
 	newValue := make(map[string]interface{}, len(value))
 	for _, status := range value {

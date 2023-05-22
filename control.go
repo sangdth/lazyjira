@@ -34,7 +34,7 @@ func createStatusView(g *ui.Gui) error {
 // from the user
 func createPromptView(g *ui.Gui, title string) error {
 	tw, th := g.Size()
-	v, err := g.SetView(PromptView, tw/6, (th/2)-1, (tw*5)/6, (th/2)+1, 0)
+	v, err := g.SetView(PromptView, tw/6, (th/2)-8, (tw*5)/6, (th/2)-6, 0)
 	if err != nil && err != ui.ErrUnknownView {
 		return err
 	}
@@ -87,10 +87,10 @@ func AddProject(g *ui.Gui, v *ui.View) error {
 }
 
 func InitConfigValue() {
-	ProjectsList.Unfocus()
+	// ProjectsList.Unfocus()
 
 	if err := createPromptView(&ui.Gui{}, " Init config, write in format: 'youremail server-url' "); err != nil {
-		log.Panicln("Error on create init config", err)
+		fmt.Println("Error on create init config", err)
 	}
 }
 
@@ -123,7 +123,7 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 	}
 
 	g.Update(func(g *ui.Gui) error {
-		path := fmt.Sprintf("savedprojects.%s", code)
+		path := fmt.Sprintf("%s.%s", PROJECTS, code)
 
 		if viper.IsSet(path) {
 			if err := createAlertView(g, "Project already exist"); err != nil {
@@ -145,7 +145,7 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			}
 
 			// TODO: How to overcome this stupid? How to write only new thingss?
-			oldValues := viper.GetStringMap("savedprojects")
+			oldValues := viper.GetStringMap(PROJECTS)
 			newValue := map[string]interface{}{
 				code: map[string]interface{}{
 					"statuses": convertedStatuses,
@@ -156,7 +156,7 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 				newValue[k] = v
 			}
 
-			viper.Set("savedprojects", newValue)
+			viper.Set(PROJECTS, newValue)
 
 			if err := viper.WriteConfig(); err != nil {
 				return err
@@ -278,7 +278,7 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 
 	value := currentItem.(string)
 
-	path := fmt.Sprintf("savedprojects.%s.statuses.%s", projectCode, value)
+	path := fmt.Sprintf("%s.%s.statuses.%s", PROJECTS, projectCode, value)
 
 	if viper.IsSet(path) {
 		currentValue := viper.GetBool(path)

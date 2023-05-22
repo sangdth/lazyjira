@@ -7,11 +7,11 @@ import (
 	ui "github.com/awesome-gocui/gocui"
 )
 
-type DialogCategory string
+type Category string
 
 const (
-	PROMPT DialogCategory = "prompt"
-	ALERT  DialogCategory = "alert"
+	PROMPT Category = "prompt"
+	ALERT  Category = "alert"
 )
 
 // Dialog is just like Dialog, instead it's mostly used for displaying an input
@@ -19,12 +19,12 @@ const (
 type Dialog struct {
 	*ui.View
 	message  string
-	category DialogCategory
+	category Category
 }
 
 // CreateDialog initializes a Dialog object with an existing View by applying some
 // basic configuration
-func CreateDialog(v *ui.View, c DialogCategory) *Dialog {
+func CreateDialog(v *ui.View, c Category) *Dialog {
 	dialog := &Dialog{}
 	dialog.View = v
 	dialog.category = c
