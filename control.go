@@ -54,7 +54,6 @@ func deletePromptView(g *ui.Gui) error {
 	return g.DeleteView(PromptView)
 }
 
-// TODO: encapsulate this into a separated file like ui for List
 func createAlertView(g *ui.Gui, msg string) error {
 	tw, th := g.Size()
 	v, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)

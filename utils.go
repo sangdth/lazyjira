@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	projectName      = "lazyjira"
+	PROJECT_NAME     = "lazyjira"
 	helpLink         = "https://github.com/sangdth/lazyjira#getting-started"
 	jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
 )
@@ -27,19 +27,30 @@ func GetConfigHome() (string, error) {
 	return home + "/.config", nil
 }
 
-func InitConfig() {
+func InitConfig() error {
 	home, _ := GetConfigHome()
+	configPath := fmt.Sprintf("%s/%s", home, PROJECT_NAME)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(fmt.Sprintf("%s/%s", home, projectName))
+	viper.AddConfigPath(configPath)
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Panicln(err)
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok { // Config file not found
+			if err := os.Mkdir(configPath, 0755); err != nil {
+				log.Panicln("Error while creating creating folder", err)
+			}
+
+			viper.SetConfigFile(fmt.Sprintf("%s/config.yaml", configPath))
+
+			err := viper.WriteConfig()
+			if err != nil {
+				log.Panicln("Error while initiating config file", err)
+			}
+		}
 	}
 
-	if !viper.IsSet("savedProjects") {
+	if !viper.IsSet("savedprojects") {
 		savedProjects := map[string]map[string]interface{}{
 			ASSIGNED_TO_ME: {
 				"statuses": nil,
@@ -47,22 +58,23 @@ func InitConfig() {
 		}
 
 		// TODO Still dont know how to reload after the first initial
-		viper.Set("savedProjects", savedProjects)
+		viper.Set("savedprojects", savedProjects)
 
-		err := viper.WriteConfig()
-		if err != nil {
-			log.Panicln(err)
+		if err := viper.WriteConfig(); err != nil {
+			log.Panicln("Error while setting default savedprojects", err)
 		}
 	}
 
 	viper.WatchConfig()
+
+	return nil
 }
 
 func GetJiraCredentials() (string, string, string, error) {
 	server := viper.GetString("server")
 	username := viper.GetString("login")
 
-	secret, err := keyring.Get(projectName, username)
+	secret, err := keyring.Get(PROJECT_NAME, username)
 	if err != nil {
 		log.Panicln(err)
 	}

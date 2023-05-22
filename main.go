@@ -24,7 +24,9 @@ var (
 )
 
 func main() {
-	InitConfig()
+	if err := InitConfig(); err != nil {
+		log.Panicln("Failed to setup config file", err)
+	}
 
 	// Initialize the gocui library
 	g, err := ui.NewGui(ui.OutputNormal, true)
