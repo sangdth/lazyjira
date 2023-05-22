@@ -76,7 +76,7 @@ func InitConfig() error {
 
 func GetJiraCredentials() (string, string, string, error) {
 	server := viper.GetString("server")
-	username := viper.GetString("login")
+	username := viper.GetString("username")
 
 	secret, err := keyring.Get(PROJECT_NAME, username)
 	if err != nil {
