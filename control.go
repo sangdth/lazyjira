@@ -80,10 +80,18 @@ func AddProject(g *ui.Gui, v *ui.View) error {
 	ProjectsList.Unfocus()
 
 	if err := createPromptView(g, " New project code "); err != nil {
-		log.Panicln("Error on createPromptView", err)
+		log.Panicln("Error on AddProject", err)
 	}
 
 	return nil
+}
+
+func InitConfigValue() {
+	ProjectsList.Unfocus()
+
+	if err := createPromptView(&ui.Gui{}, " Init config, write in format: 'youremail server-url' "); err != nil {
+		log.Panicln("Error on create init config", err)
+	}
 }
 
 func CloseFloatView(g *ui.Gui, v *ui.View) error {

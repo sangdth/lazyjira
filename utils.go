@@ -47,6 +47,10 @@ func InitConfig() error {
 			if err != nil {
 				log.Panicln("Error while initiating config file", err)
 			}
+
+			// InitConfigValue() // can NOT work, why???
+			// panic: runtime error: invalid memory address or nil pointer dereference
+			// [signal SIGSEGV: segmentation violation code=0x2 addr=0x0 pc=0x1030fa664
 		}
 	}
 
