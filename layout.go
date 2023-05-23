@@ -40,7 +40,7 @@ func layout(g *ui.Gui) error {
 	}
 
 	if _, err := g.View(AlertView); err == nil {
-		_, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)
+		_, err := g.SetView(AlertView, tw/6, (th/2)-10, (tw*5)/6, (th/2)-4, 0)
 		if err != nil && err != ui.ErrUnknownView {
 			return err
 		}

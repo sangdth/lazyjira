@@ -3,12 +3,15 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
 	ui "github.com/awesome-gocui/gocui"
+	config "github.com/gookit/config/v2"
+	yaml "github.com/gookit/config/v2/yaml"
 	viper "github.com/spf13/viper"
 	keyring "github.com/zalando/go-keyring"
 )
@@ -22,57 +25,60 @@ const (
 	JIRA_LINK    = "https://id.atlassian.com/manage-profile/security/api-tokens"
 )
 
-func GetConfigHome() (string, error) {
-	home := os.Getenv("XDG_CONFIG_HOME")
-	if home != "" {
-		return home, nil
-	}
-	return home + "/.config", nil
-}
-
 func InitConfig() error {
-	home, _ := GetConfigHome()
-	configPath := fmt.Sprintf("%s/%s", home, PROJECT_NAME)
+	configHome := os.Getenv("XDG_CONFIG_HOME")
+	configDir := fmt.Sprintf("%s/%s", configHome, PROJECT_NAME)
+	configPath := fmt.Sprintf("%s/%s", configDir, "config.yaml")
 
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(configPath)
+	config.WithOptions(config.ParseEnv)
+	config.AddDriver(yaml.Driver)
 
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok { // Config file not found
-			if err := os.Mkdir(configPath, 0755); err != nil {
-				log.Panicln("Error while creating creating folder", err)
-			}
-
-			viper.SetConfigFile(fmt.Sprintf("%s/config.yaml", configPath))
-
-			err := viper.WriteConfig()
-			if err != nil {
-				log.Panicln("Error while initiating config file", err)
-			}
-
-			InitConfigValue() // can NOT work, why???
-			// panic: runtime error: invalid memory address or nil pointer dereference
-			// [signal SIGSEGV: segmentation violation code=0x2 addr=0x0 pc=0x1030fa664
+	// Can not find the folder, start creating it
+	if _, err := os.Stat(configDir); err != nil && os.IsNotExist(err) {
+		if err := os.Mkdir(configDir, 0755); err != nil {
+			log.Panicln("Error while creating config folder", err)
 		}
-	}
 
-	if !viper.IsSet(PROJECTS) {
+		// Assume we don't have the file as well, so create it
+		file, err := os.Create(configPath)
+		if err != nil {
+			log.Printf("Error while creating config file: %s\n", err)
+		}
+
+		defer file.Close()
+
 		savedProjects := map[string]map[string]interface{}{
 			ASSIGNED_TO_ME: {
-				"statuses": nil,
+				"statuses": map[string]bool{
+					"open": true,
+				},
 			},
 		}
 
-		// TODO Still dont know how to reload after the first initial
-		viper.Set(PROJECTS, savedProjects)
+		err = config.Set(PROJECTS, savedProjects)
+		if err != nil {
+			log.Printf("Error while setting default config file: %s\n", err)
+		}
 
-		if err := viper.WriteConfig(); err != nil {
-			log.Panicln("Error while setting default saved projects", err)
+		buf := new(bytes.Buffer)
+
+		_, err = config.DumpTo(buf, "yaml")
+		if err != nil {
+			log.Printf("Error while dumping config file: %s\n", err)
+		}
+
+		err = ioutil.WriteFile(configPath, buf.Bytes(), 0755)
+		if err != nil {
+			log.Printf("Error while creating config file: %s\n", err)
+		}
+	} else {
+		log.Println("Loading config file")
+
+		err := config.LoadFiles(configPath)
+		if err != nil {
+			log.Panicln("Error while loading config file", err)
 		}
 	}
-
-	viper.WatchConfig()
 
 	return nil
 }

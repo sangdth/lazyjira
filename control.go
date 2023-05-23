@@ -86,10 +86,10 @@ func AddProject(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
-func InitConfigValue() {
+func InitConfigValue(g *ui.Gui) {
 	// ProjectsList.Unfocus()
 
-	if err := createPromptView(&ui.Gui{}, " Init config, write in format: 'youremail server-url' "); err != nil {
+	if err := createPromptView(g, " Init config, write in format: 'youremail server-url' "); err != nil {
 		fmt.Println("Error on create init config", err)
 	}
 }
@@ -145,18 +145,11 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			}
 
 			// TODO: How to overcome this stupid? How to write only new thingss?
-			oldValues := viper.GetStringMap(PROJECTS)
 			newValue := map[string]interface{}{
-				code: map[string]interface{}{
-					"statuses": convertedStatuses,
-				},
+				"statuses": convertedStatuses,
 			}
 
-			for k, v := range oldValues {
-				newValue[k] = v
-			}
-
-			viper.Set(PROJECTS, newValue)
+			viper.Set(path, newValue)
 
 			if err := viper.WriteConfig(); err != nil {
 				return err
@@ -276,9 +269,9 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 
 	projectCode := IssuesList.code
 
-	value := currentItem.(string)
+	statusKey := currentItem.(string)
 
-	path := fmt.Sprintf("%s.%s.statuses.%s", PROJECTS, projectCode, value)
+	path := fmt.Sprintf("%s.%s.statuses.%s", PROJECTS, projectCode, statusKey)
 
 	if viper.IsSet(path) {
 		currentValue := viper.GetBool(path)
