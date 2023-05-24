@@ -4,7 +4,7 @@ const (
 	ProjectName = "lazyjira"
 
 	ProjectsKey     = "projects"
-	AssignedToMeKey = "assigned_to_me"
+	AssignedToMeKey = "assigned to me"
 	ServerKey       = "server"
 	UsernameKey     = "username"
 

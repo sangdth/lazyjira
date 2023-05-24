@@ -113,14 +113,20 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 
 	g.Update(func(g *ui.Gui) error {
 		if isNewUsernameView(v) {
-			writeConfigToFile(UsernameKey, value)
+			if err := config.Set(UsernameKey, value); err != nil {
+				log.Panicln("Error while init username", err)
+			}
+			writeConfigToFile()
 			deletePromptView(g)
 			ProjectsList.Focus(g)
 			LoadProjects()
 		}
 
 		if isNewServerView(v) {
-			writeConfigToFile(ServerKey, value)
+			if err := config.Set(ServerKey, value); err != nil {
+				log.Panicln("Error while init server", err)
+			}
+			writeConfigToFile()
 			deletePromptView(g)
 			ProjectsList.Focus(g)
 			LoadProjects()
@@ -128,8 +134,6 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 
 		if isNewCodeView(v) {
 			path := fmt.Sprintf("%s.%s", ProjectsKey, value)
-
-			log.Println("111")
 
 			if config.Exists(path) {
 				createAlertView(g, "Project already exist")
@@ -147,19 +151,17 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 				newValue := map[string]interface{}{
 					"statuses": convertedStatuses,
 				}
-
 				if err := config.Set(path, newValue); err != nil {
 					log.Panicln("Error while setting new statuses", err)
 				}
 
-				log.Println("222")
+				if err := config.Set(path, newValue); err != nil {
+					log.Panicln("Error while adding project code", err)
+				}
 
-				writeConfigToFile(path, newValue)
-
+				writeConfigToFile()
 				deletePromptView(g)
-
 				ProjectsList.Focus(g)
-
 				LoadProjects()
 			}
 
@@ -267,26 +269,31 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 		return nil
 	}
 
-	projectCode := IssuesList.code
+	projectCode := strings.ToLower(IssuesList.code)
 
 	statusKey := currentItem.(string)
 
 	path := fmt.Sprintf("%s.%s.statuses.%s", ProjectsKey, projectCode, statusKey)
 
+	// log.Printf("before %s", config.Get(path))
+
 	if config.Exists(path) {
+		log.Printf("Exist %s", path)
+
 		currentValue := config.Bool(path)
 		if err := config.Set(path, !currentValue); err != nil {
 			log.Printf("Error while toggling status %s", err)
 		}
 	} else {
+		log.Printf("Not Exist %s", path)
 		if err := config.Set(path, true); err != nil {
 			log.Printf("Error while adding new status value %s", err)
 		}
 	}
 
-	// if err := WriteConfig(); err != nil {
-	// 	return err
-	// }
+	log.Printf("outside")
+
+	writeConfigToFile()
 
 	return nil
 }

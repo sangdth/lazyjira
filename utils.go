@@ -42,17 +42,25 @@ func InitConfig() error {
 
 		defer file.Close()
 
-		savedProjects := map[string]map[string]bool{
+		initData := map[string]map[string]bool{
 			"statuses": {
 				"open": true,
 			},
 		}
 
-		writeConfigToFile(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey), savedProjects)
+		if err := config.Set(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey), initData); err != nil {
+			log.Panicln("Error while init first configs", err)
+		}
 
-		return nil
+		// it is nil wtf????
+		// log.Println("before: ", config.Get(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey)))
+		writeConfigToFile()
+
+		return nil // need to remove this return
 	}
 
+	// TODO Without this LoadFiles everything will be nil
+	// how to create the file before run the init?
 	if err := config.LoadFiles(configPath); err != nil {
 		log.Panicln("Error while loading config file", err)
 	}
@@ -95,25 +103,6 @@ func GetSavedStatusesByProjectCode(code string) []interface{} {
 	}
 
 	return statuses
-}
-
-func SetNewStatusesByProjectCode(code string, value []interface{}) error {
-	path := fmt.Sprintf("%s.%s.statuses", ProjectsKey, code)
-
-	newValue := make(map[string]interface{}, len(value))
-	for _, status := range value {
-		newValue[status.(string)] = true
-	}
-
-	if err := config.Set(path, newValue); err != nil {
-		log.Printf("Error while set new statuses by project code %s", err)
-	}
-
-	// if err := WriteConfig(); err != nil {
-	// 	return err
-	// }
-
-	return nil
 }
 
 func LoadProjects() {
@@ -184,10 +173,6 @@ func RenderStatusesList(statuses []jira.Status) error {
 
 	StatusesList.SetItems(data)
 
-	if err := SetNewStatusesByProjectCode(StatusesList.code, data); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -231,11 +216,7 @@ func FetchStatuses(g *ui.Gui, code string) error {
 /*
  * This helper will set the config into memory and write it to the file
  */
-func writeConfigToFile(path string, value any) {
-	if err := config.Set(path, value); err != nil {
-		log.Panicln("Error while setting new value", err)
-	}
-
+func writeConfigToFile() {
 	buff := new(bytes.Buffer)
 
 	if _, err := config.DumpTo(buff, config.Yaml); err != nil {
@@ -246,6 +227,10 @@ func writeConfigToFile(path string, value any) {
 
 	if err := os.WriteFile(configPath, buff.Bytes(), 0755); err != nil {
 		log.Printf("Error while writing config file: %s\n", err)
+	}
+
+	if err := config.ReloadFiles(); err != nil {
+		log.Printf("Error ReloadFiles %s", err)
 	}
 }
 
