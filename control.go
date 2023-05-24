@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	ui "github.com/awesome-gocui/gocui"
-	viper "github.com/spf13/viper"
+	config "github.com/gookit/config/v2"
 )
 
 var (
@@ -125,7 +125,7 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 	g.Update(func(g *ui.Gui) error {
 		path := fmt.Sprintf("%s.%s", PROJECTS, code)
 
-		if viper.IsSet(path) {
+		if config.Exists(path) {
 			if err := createAlertView(g, "Project already exist"); err != nil {
 				log.Println("Failed to create AlertView", err)
 			}
@@ -149,11 +149,13 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 				"statuses": convertedStatuses,
 			}
 
-			viper.Set(path, newValue)
-
-			if err := viper.WriteConfig(); err != nil {
-				return err
+			if err := config.Set(path, newValue); err != nil {
+				log.Printf("Error while setting new statuses %s", err)
 			}
+
+			// if err := .WriteConfig(); err != nil {
+			// 	return err
+			// }
 		}
 
 		if err := deletePromptView(g); err != nil {
@@ -163,7 +165,6 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 
 		ProjectsList.Focus(g)
 
-		// TODO: Still dont know why Viper can only get the latest set
 		LoadProjects()
 
 		return nil
@@ -273,16 +274,20 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 
 	path := fmt.Sprintf("%s.%s.statuses.%s", PROJECTS, projectCode, statusKey)
 
-	if viper.IsSet(path) {
-		currentValue := viper.GetBool(path)
-		viper.Set(path, !currentValue)
+	if config.Exists(path) {
+		currentValue := config.Bool(path)
+		if err := config.Set(path, !currentValue); err != nil {
+			log.Printf("Error while toggling status %s", err)
+		}
 	} else {
-		viper.Set(path, true)
+		if err := config.Set(path, true); err != nil {
+			log.Printf("Error while adding new status value %s", err)
+		}
 	}
 
-	if err := viper.WriteConfig(); err != nil {
-		return err
-	}
+	// if err := WriteConfig(); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -12,7 +11,6 @@ import (
 	ui "github.com/awesome-gocui/gocui"
 	config "github.com/gookit/config/v2"
 	yaml "github.com/gookit/config/v2/yaml"
-	viper "github.com/spf13/viper"
 	keyring "github.com/zalando/go-keyring"
 )
 
@@ -36,13 +34,13 @@ func InitConfig() error {
 	// Can not find the folder, start creating it
 	if _, err := os.Stat(configDir); err != nil && os.IsNotExist(err) {
 		if err := os.Mkdir(configDir, 0755); err != nil {
-			log.Panicln("Error while creating config folder", err)
+			log.Printf("Error while creating config folder %s", err)
 		}
 
 		// Assume we don't have the file as well, so create it
 		file, err := os.Create(configPath)
 		if err != nil {
-			log.Printf("Error while creating config file: %s\n", err)
+			log.Printf("Error while creating config file %s", err)
 		}
 
 		defer file.Close()
@@ -55,28 +53,25 @@ func InitConfig() error {
 			},
 		}
 
-		err = config.Set(PROJECTS, savedProjects)
-		if err != nil {
+		if err := config.Set(PROJECTS, savedProjects); err != nil {
 			log.Printf("Error while setting default config file: %s\n", err)
 		}
 
 		buf := new(bytes.Buffer)
 
-		_, err = config.DumpTo(buf, "yaml")
-		if err != nil {
+		if _, err := config.DumpTo(buf, "yaml"); err != nil {
 			log.Printf("Error while dumping config file: %s\n", err)
 		}
 
-		err = ioutil.WriteFile(configPath, buf.Bytes(), 0755)
-		if err != nil {
-			log.Printf("Error while creating config file: %s\n", err)
+		if err := os.WriteFile(configPath, buf.Bytes(), 0755); err != nil {
+			log.Printf("Error while writing config file: %s\n", err)
 		}
 	} else {
 		log.Println("Loading config file")
 
 		err := config.LoadFiles(configPath)
 		if err != nil {
-			log.Panicln("Error while loading config file", err)
+			log.Printf("Error while loading config file %s", err)
 		}
 	}
 
@@ -84,8 +79,8 @@ func InitConfig() error {
 }
 
 func GetJiraCredentials() (string, string, string, error) {
-	server := viper.GetString(SERVER)
-	username := viper.GetString(USERNAME)
+	server := config.String(SERVER)
+	username := config.String(USERNAME)
 
 	secret, err := keyring.Get(PROJECT_NAME, username)
 	if err != nil {
@@ -96,10 +91,9 @@ func GetJiraCredentials() (string, string, string, error) {
 }
 
 func GetSavedProjects() []string {
+	stringMap := config.StringMap(PROJECTS)
+
 	var projects []string
-
-	stringMap := viper.GetStringMap(PROJECTS)
-
 	for key := range stringMap {
 		projects = append(projects, strings.ToUpper(key))
 	}
@@ -108,7 +102,7 @@ func GetSavedProjects() []string {
 }
 
 func GetSavedStatusesByProjectCode(code string) []interface{} {
-	stringMap := viper.GetStringMap(fmt.Sprintf("%s.%s.statuses", PROJECTS, code))
+	stringMap := config.StringMap(fmt.Sprintf("%s.%s.statuses", PROJECTS, code))
 
 	statuses := make([]interface{}, len(stringMap))
 
@@ -129,11 +123,13 @@ func SetNewStatusesByProjectCode(code string, value []interface{}) error {
 		newValue[status.(string)] = true
 	}
 
-	viper.Set(path, newValue)
-
-	if err := viper.WriteConfig(); err != nil {
-		return err
+	if err := config.Set(path, newValue); err != nil {
+		log.Printf("Error while set new statuses by project code %s", err)
 	}
+
+	// if err := WriteConfig(); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
