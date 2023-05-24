@@ -22,7 +22,7 @@ func getPaths() (string, string, string) {
 	return configPath, configDir, configHome
 }
 
-func InitConfig(g *ui.Gui) error {
+func InitConfig() error {
 	configPath, configDir, _ := getPaths()
 
 	config.WithOptions(config.ParseEnv)
@@ -42,22 +42,18 @@ func InitConfig(g *ui.Gui) error {
 
 		defer file.Close()
 
-		savedProjects := map[string]map[string]interface{}{
-			AssignedToMeKey: {
-				"statuses": map[string]bool{
-					"open": true,
-				},
+		savedProjects := map[string]map[string]bool{
+			"statuses": {
+				"open": true,
 			},
 		}
 
-		g.Update(func(g *ui.Gui) error {
-			writeConfigToFile(ProjectsKey, savedProjects)
-			return nil
-		})
+		writeConfigToFile(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey), savedProjects)
+
+		return nil
 	}
 
-	err := config.LoadFiles(configPath)
-	if err != nil {
+	if err := config.LoadFiles(configPath); err != nil {
 		log.Panicln("Error while loading config file", err)
 	}
 
@@ -242,7 +238,7 @@ func writeConfigToFile(path string, value any) {
 
 	buff := new(bytes.Buffer)
 
-	if _, err := config.DumpTo(buff, "yaml"); err != nil {
+	if _, err := config.DumpTo(buff, config.Yaml); err != nil {
 		log.Printf("Error while dumping config file: %s\n", err)
 	}
 
