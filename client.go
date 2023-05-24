@@ -9,10 +9,6 @@ import (
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
 )
 
-const (
-	ASSIGNED_TO_ME = "assigned_to_me"
-)
-
 func GetJiraClient() (*jira.Client, error) {
 	// Get Jira API token from Keychain
 	server, username, secret, _ := GetJiraCredentials()
@@ -36,7 +32,7 @@ func MakeJQL(rawCode string) string {
 
 	switch code {
 
-	case ASSIGNED_TO_ME:
+	case AssignedToMeKey:
 		return "assignee=currentUser()"
 
 	default:

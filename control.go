@@ -42,23 +42,25 @@ func createPromptView(g *ui.Gui, title string) error {
 	g.Cursor = true
 
 	PromptDialog = CreateDialog(v, PROMPT)
-	PromptDialog.SetTitles(" Insert Project Code ", " (Press Esc to close) ")
+	PromptDialog.SetTitles(title, " (Press Esc to close) ")
 	PromptDialog.Focus(g)
 
 	return nil
 }
 
 // deletePromptView deletes the current prompt view
-func deletePromptView(g *ui.Gui) error {
+func deletePromptView(g *ui.Gui) {
 	g.Cursor = false
-	return g.DeleteView(PromptView)
+	if err := g.DeleteView(PromptView); err != nil {
+		log.Panicln("Error while deleting prompt view", err)
+	}
 }
 
-func createAlertView(g *ui.Gui, msg string) error {
+func createAlertView(g *ui.Gui, msg string) {
 	tw, th := g.Size()
 	v, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)
 	if err != nil && err != ui.ErrUnknownView {
-		return err
+		log.Panicln("Error while creating alert view", err)
 	}
 
 	g.Cursor = false
@@ -67,8 +69,6 @@ func createAlertView(g *ui.Gui, msg string) error {
 	AlertDialog.SetTitles(" Error! ", " (Press Esc to close) ")
 	AlertDialog.SetContent(msg)
 	AlertDialog.Focus(g)
-
-	return nil
 }
 
 func deleteAlertView(g *ui.Gui) error {
@@ -79,29 +79,18 @@ func deleteAlertView(g *ui.Gui) error {
 func AddProject(g *ui.Gui, v *ui.View) error {
 	ProjectsList.Unfocus()
 
-	if err := createPromptView(g, " New project code "); err != nil {
+	if err := createPromptView(g, InsertNewCodeTitle); err != nil {
 		log.Panicln("Error on AddProject", err)
 	}
 
 	return nil
 }
 
-func InitConfigValue(g *ui.Gui) {
-	// ProjectsList.Unfocus()
-
-	if err := createPromptView(g, " Init config, write in format: 'youremail server-url' "); err != nil {
-		fmt.Println("Error on create init config", err)
-	}
-}
-
 func CloseFloatView(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
 	case PromptView:
-		if err := deletePromptView(g); err != nil {
-			log.Println("Error on deletePromptView", err)
-			return err
-		}
+		deletePromptView(g)
 		ProjectsList.Focus(g)
 
 	case AlertView:
@@ -117,55 +106,65 @@ func CloseFloatView(g *ui.Gui, v *ui.View) error {
 }
 
 func SubmitPrompt(g *ui.Gui, v *ui.View) error {
-	code := strings.TrimSpace(v.ViewBuffer())
-	if len(code) == 0 {
+	value := strings.TrimSpace(v.ViewBuffer())
+	if len(value) == 0 {
 		return nil
 	}
 
 	g.Update(func(g *ui.Gui) error {
-		path := fmt.Sprintf("%s.%s", PROJECTS, code)
+		if isNewUsernameView(v) {
+			writeConfigToFile(UsernameKey, value)
+			deletePromptView(g)
+			ProjectsList.Focus(g)
+			LoadProjects()
+		}
 
-		if config.Exists(path) {
-			if err := createAlertView(g, "Project already exist"); err != nil {
-				log.Println("Failed to create AlertView", err)
-			}
-			return nil
-		} else {
-			statuses, _, jiraErr := SearchStatusesByProjectCode(code)
-			if jiraErr != nil {
-				if err := createAlertView(g, jiraErr.Error()); err != nil {
-					log.Println("Failed to create AlertView", err)
+		if isNewServerView(v) {
+			writeConfigToFile(ServerKey, value)
+			deletePromptView(g)
+			ProjectsList.Focus(g)
+			LoadProjects()
+		}
+
+		if isNewCodeView(v) {
+			path := fmt.Sprintf("%s.%s", ProjectsKey, value)
+
+			log.Println("111")
+
+			if config.Exists(path) {
+				createAlertView(g, "Project already exist")
+			} else {
+				statuses, _, err := SearchStatusesByProjectCode(value)
+				if err != nil {
+					createAlertView(g, err.Error())
 				}
-				return nil
+
+				convertedStatuses := make(map[string]bool, len(statuses))
+				for _, status := range statuses {
+					convertedStatuses[strings.ToLower(status.Name)] = true
+				}
+
+				newValue := map[string]interface{}{
+					"statuses": convertedStatuses,
+				}
+
+				if err := config.Set(path, newValue); err != nil {
+					log.Panicln("Error while setting new statuses", err)
+				}
+
+				log.Println("222")
+
+				writeConfigToFile(path, newValue)
+
+				deletePromptView(g)
+
+				ProjectsList.Focus(g)
+
+				LoadProjects()
 			}
 
-			convertedStatuses := make(map[string]bool, len(statuses))
-			for _, status := range statuses {
-				convertedStatuses[strings.ToLower(status.Name)] = true
-			}
-
-			// TODO: How to overcome this stupid? How to write only new thingss?
-			newValue := map[string]interface{}{
-				"statuses": convertedStatuses,
-			}
-
-			if err := config.Set(path, newValue); err != nil {
-				log.Printf("Error while setting new statuses %s", err)
-			}
-
-			// if err := .WriteConfig(); err != nil {
-			// 	return err
-			// }
+			return nil
 		}
-
-		if err := deletePromptView(g); err != nil {
-			log.Println("Error on deletePromptView", err)
-			return err
-		}
-
-		ProjectsList.Focus(g)
-
-		LoadProjects()
 
 		return nil
 	})
@@ -272,7 +271,7 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 
 	statusKey := currentItem.(string)
 
-	path := fmt.Sprintf("%s.%s.statuses.%s", PROJECTS, projectCode, statusKey)
+	path := fmt.Sprintf("%s.%s.statuses.%s", ProjectsKey, projectCode, statusKey)
 
 	if config.Exists(path) {
 		currentValue := config.Bool(path)

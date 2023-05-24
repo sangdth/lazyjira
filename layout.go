@@ -4,6 +4,7 @@ import (
 	"log"
 
 	ui "github.com/awesome-gocui/gocui"
+	config "github.com/gookit/config/v2"
 )
 
 // RelativeSize returns the relative size of the terminal window view
@@ -20,6 +21,18 @@ func relativeSize(g *ui.Gui) (int, int) {
 func layout(g *ui.Gui) error {
 	tw, th := g.Size()
 	rw, rh := relativeSize(g)
+
+	if !config.Exists(ServerKey) {
+		if err := createPromptView(g, InsertServerTitle); err != nil {
+			log.Panicln("Error while inserting server", err)
+		}
+	}
+
+	if !config.Exists(UsernameKey) {
+		if err := createPromptView(g, InsertUsernameTitle); err != nil {
+			log.Panicln("Error while inserting username", err)
+		}
+	}
 
 	if _, err := g.SetView(ProjectsView, 0, 0, rw, th-rh, 0); err != nil {
 		log.Panicln("Cannot update view", err)

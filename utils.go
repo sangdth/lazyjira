@@ -14,19 +14,16 @@ import (
 	keyring "github.com/zalando/go-keyring"
 )
 
-const (
-	PROJECT_NAME = "lazyjira"
-	PROJECTS     = "projects"
-	SERVER       = "server"
-	USERNAME     = "username"
-	HELP_LINK    = "https://github.com/sangdth/lazyjira#getting-started"
-	JIRA_LINK    = "https://id.atlassian.com/manage-profile/security/api-tokens"
-)
-
-func InitConfig() error {
+func getPaths() (string, string, string) {
 	configHome := os.Getenv("XDG_CONFIG_HOME")
-	configDir := fmt.Sprintf("%s/%s", configHome, PROJECT_NAME)
+	configDir := fmt.Sprintf("%s/%s", configHome, ProjectName)
 	configPath := fmt.Sprintf("%s/%s", configDir, "config.yaml")
+
+	return configPath, configDir, configHome
+}
+
+func InitConfig(g *ui.Gui) error {
+	configPath, configDir, _ := getPaths()
 
 	config.WithOptions(config.ParseEnv)
 	config.AddDriver(yaml.Driver)
@@ -46,43 +43,32 @@ func InitConfig() error {
 		defer file.Close()
 
 		savedProjects := map[string]map[string]interface{}{
-			ASSIGNED_TO_ME: {
+			AssignedToMeKey: {
 				"statuses": map[string]bool{
 					"open": true,
 				},
 			},
 		}
 
-		if err := config.Set(PROJECTS, savedProjects); err != nil {
-			log.Printf("Error while setting default config file: %s\n", err)
-		}
+		g.Update(func(g *ui.Gui) error {
+			writeConfigToFile(ProjectsKey, savedProjects)
+			return nil
+		})
+	}
 
-		buf := new(bytes.Buffer)
-
-		if _, err := config.DumpTo(buf, "yaml"); err != nil {
-			log.Printf("Error while dumping config file: %s\n", err)
-		}
-
-		if err := os.WriteFile(configPath, buf.Bytes(), 0755); err != nil {
-			log.Printf("Error while writing config file: %s\n", err)
-		}
-	} else {
-		log.Println("Loading config file")
-
-		err := config.LoadFiles(configPath)
-		if err != nil {
-			log.Printf("Error while loading config file %s", err)
-		}
+	err := config.LoadFiles(configPath)
+	if err != nil {
+		log.Panicln("Error while loading config file", err)
 	}
 
 	return nil
 }
 
 func GetJiraCredentials() (string, string, string, error) {
-	server := config.String(SERVER)
-	username := config.String(USERNAME)
+	server := config.String(ServerKey)
+	username := config.String(UsernameKey)
 
-	secret, err := keyring.Get(PROJECT_NAME, username)
+	secret, err := keyring.Get(ProjectName, username)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -91,7 +77,7 @@ func GetJiraCredentials() (string, string, string, error) {
 }
 
 func GetSavedProjects() []string {
-	stringMap := config.StringMap(PROJECTS)
+	stringMap := config.StringMap(ProjectsKey)
 
 	var projects []string
 	for key := range stringMap {
@@ -102,7 +88,7 @@ func GetSavedProjects() []string {
 }
 
 func GetSavedStatusesByProjectCode(code string) []interface{} {
-	stringMap := config.StringMap(fmt.Sprintf("%s.%s.statuses", PROJECTS, code))
+	stringMap := config.StringMap(fmt.Sprintf("%s.%s.statuses", ProjectsKey, code))
 
 	statuses := make([]interface{}, len(stringMap))
 
@@ -116,7 +102,7 @@ func GetSavedStatusesByProjectCode(code string) []interface{} {
 }
 
 func SetNewStatusesByProjectCode(code string, value []interface{}) error {
-	path := fmt.Sprintf("%s.%s.statuses", PROJECTS, code)
+	path := fmt.Sprintf("%s.%s.statuses", ProjectsKey, code)
 
 	newValue := make(map[string]interface{}, len(value))
 	for _, status := range value {
@@ -140,7 +126,7 @@ func LoadProjects() {
 	savedProjects := GetSavedProjects()
 
 	if len(savedProjects) == 0 {
-		ProjectsList.SetTitle("No projects (Ctrl-f to add)")
+		ProjectsList.SetTitle("No projects (Press 'a' to add)")
 		ProjectsList.Reset()
 		IssuesList.Reset()
 		IssuesList.SetTitle("No issues")
@@ -235,10 +221,6 @@ func FetchStatuses(g *ui.Gui, code string) error {
 		StatusesList.Title = " Projects > Statuses | Fetched failed "
 		StatusesList.Clear()
 
-		// if err := createAlertView(g, "New Alert:"); err != nil {
-		// 	log.Panicln("Error on createAlertView", err)
-		// }
-
 		return nil
 	}
 
@@ -250,10 +232,43 @@ func FetchStatuses(g *ui.Gui, code string) error {
 	return nil
 }
 
+/*
+ * This helper will set the config into memory and write it to the file
+ */
+func writeConfigToFile(path string, value any) {
+	if err := config.Set(path, value); err != nil {
+		log.Panicln("Error while setting new value", err)
+	}
+
+	buff := new(bytes.Buffer)
+
+	if _, err := config.DumpTo(buff, "yaml"); err != nil {
+		log.Printf("Error while dumping config file: %s\n", err)
+	}
+
+	configPath, _, _ := getPaths()
+
+	if err := os.WriteFile(configPath, buff.Bytes(), 0755); err != nil {
+		log.Printf("Error while writing config file: %s\n", err)
+	}
+}
+
 func spaces(n int) string {
 	var s bytes.Buffer
 	for i := 0; i < n; i++ {
 		s.WriteString(" ")
 	}
 	return s.String()
+}
+
+func isNewUsernameView(v *ui.View) bool {
+	return strings.Contains(v.Title, InsertUsernameTitle) // || strings.Contains(v.Title, "try again")
+}
+
+func isNewServerView(v *ui.View) bool {
+	return strings.Contains(v.Title, InsertServerTitle)
+}
+
+func isNewCodeView(v *ui.View) bool {
+	return strings.Contains(v.Title, InsertNewCodeTitle)
 }

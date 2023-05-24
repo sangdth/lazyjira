@@ -24,9 +24,6 @@ var (
 )
 
 func main() {
-	if err := InitConfig(); err != nil {
-		log.Panicln("Failed to setup config file", err)
-	}
 
 	// Initialize the gocui library
 	g, err := ui.NewGui(ui.OutputNormal, true)
@@ -37,6 +34,10 @@ func main() {
 	defer g.Close()
 
 	g.Cursor = false
+
+	if err := InitConfig(g); err != nil {
+		log.Panicln("Failed to setup config file", err)
+	}
 
 	// Set up the main screen and keybindings
 	g.SetManagerFunc(layout)
@@ -58,7 +59,6 @@ func main() {
 
 	g.Update(func(g *ui.Gui) error {
 		LoadProjects()
-
 		return nil
 	})
 

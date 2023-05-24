@@ -29,7 +29,7 @@ func CreateDialog(v *ui.View, c Category) *Dialog {
 	dialog.View = v
 	dialog.category = c
 
-	v.FrameRunes = []rune{'═', '║', '╔', '╗', '╚', '╝', '╠', '╣', '╦', '╩', '╬'}
+	v.FrameRunes = []rune{'═', '║', '╔', '╗', '╚', '╝'}
 
 	switch c {
 	case PROMPT:
