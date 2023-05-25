@@ -42,22 +42,42 @@ func InitConfig() error {
 
 		defer file.Close()
 
-		initData := map[string]map[string]bool{
-			"statuses": {
-				"open": true,
-			},
+		if err := config.LoadFiles(configPath); err != nil {
+			log.Panicln("Error while loading config file", err)
 		}
-
-		if err := config.Set(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey), initData); err != nil {
-			log.Panicln("Error while init first configs", err)
-		}
-
-		// it is nil wtf????
-		// log.Println("before: ", config.Get(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey)))
-		writeConfigToFile()
-
-		return nil // need to remove this return
 	}
+
+	// Can not find the folder, start creating it
+	// if _, err := os.Stat(configDir); err != nil && os.IsNotExist(err) {
+	// if err := os.Mkdir(configDir, 0755); err != nil {
+	// 	log.Printf("Error while creating config folder %s", err)
+	// }
+
+	// // Assume we don't have the file as well, so create it
+	// file, err := os.Create(configPath)
+	// if err != nil {
+	// 	log.Printf("Error while creating config file %s", err)
+	// }
+
+	// defer file.Close()
+
+	// if !config.Exists(ProjectsKey) {
+	// 	initData := map[string]map[string]bool{
+	// 		"statuses": {
+	// 			"open": true,
+	// 		},
+	// 	}
+
+	// 	if err := config.Set(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey), initData); err != nil {
+	// 		log.Panicln("Error while init first configs", err)
+	// 	}
+
+	// 	// it is nil wtf????
+	// 	log.Println("before: ", config.Get(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey)))
+	// 	writeConfigToFile()
+
+	// 	return nil // need to remove this return
+	// }
 
 	// TODO Without this LoadFiles everything will be nil
 	// how to create the file before run the init?
@@ -227,10 +247,6 @@ func writeConfigToFile() {
 
 	if err := os.WriteFile(configPath, buff.Bytes(), 0755); err != nil {
 		log.Printf("Error while writing config file: %s\n", err)
-	}
-
-	if err := config.ReloadFiles(); err != nil {
-		log.Printf("Error ReloadFiles %s", err)
 	}
 }
 
