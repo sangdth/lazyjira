@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
@@ -78,6 +79,8 @@ func loadProjects() {
 
 	savedProjects := GetSavedProjects()
 
+	sort.Strings(savedProjects)
+
 	if len(savedProjects) == 0 {
 		ProjectsList.SetTitle("No projects (Press 'a' to add)")
 		ProjectsList.Reset()
@@ -148,7 +151,6 @@ func FetchIssues(g *ui.Gui, code string) error {
 	IssuesList.SetCode(code)
 
 	issues, err := SearchIssuesByProjectCode(code)
-
 	if err != nil {
 		IssuesList.Title = fmt.Sprintf(" Failed to load issues from: %s ", code)
 		IssuesList.Clear()
@@ -169,12 +171,10 @@ func FetchStatuses(g *ui.Gui, code string) error {
 	if err != nil {
 		StatusesList.Title = " Projects > Statuses | Fetched failed "
 		StatusesList.Clear()
-
-		return nil
+		return err
 	}
 
 	if err := RenderStatusesList(statuses); err != nil {
-		log.Println("Error on RenderStatuses")
 		return err
 	}
 
