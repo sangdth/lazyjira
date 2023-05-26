@@ -56,7 +56,7 @@ func deletePromptView(g *ui.Gui) {
 	}
 }
 
-func createAlertView(g *ui.Gui, title string, content string) {
+func createAlertView(g *ui.Gui, o CreateAlertViewOptions) {
 	tw, th := g.Size()
 	v, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)
 	if err != nil && err != ui.ErrUnknownView {
@@ -66,14 +66,17 @@ func createAlertView(g *ui.Gui, title string, content string) {
 	g.Cursor = false
 
 	AlertDialog = CreateDialog(v, ALERT)
-	AlertDialog.SetTitles(title, DialogDescription)
-	AlertDialog.SetContent(content)
+	AlertDialog.SetTitles(o.title, DialogDescription)
+	AlertDialog.SetContent(o.content)
+	AlertDialog.SetValue(o.value)
 	AlertDialog.Focus(g)
 }
 
-func deleteAlertView(g *ui.Gui) error {
+func deleteAlertView(g *ui.Gui) {
 	g.Cursor = false
-	return g.DeleteView(AlertView)
+	if err := g.DeleteView(AlertView); err != nil {
+		log.Panicln("Error while deleting alert view", err)
+	}
 }
 
 func AddProject(g *ui.Gui, v *ui.View) error {
@@ -95,10 +98,7 @@ func CancelDialog(g *ui.Gui, v *ui.View) error {
 		return nil
 
 	case AlertView:
-		if err := deleteAlertView(g); err != nil {
-			log.Println("Error on deletePromptView", err)
-			return err
-		}
+		deleteAlertView(g)
 		if _, err := g.View(PromptView); err == nil {
 			PromptDialog.Focus(g)
 		} else {
@@ -144,14 +144,22 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			path := fmt.Sprintf("%s.%s", ProjectsKey, value)
 
 			if config.Exists(path) {
-				createAlertView(g, " Alert! ", "Project already exist")
+				existOpts := CreateAlertViewOptions{
+					title:   " Alert! ",
+					content: "Project already exist",
+				}
+				createAlertView(g, existOpts)
 
 				return nil
 			}
 
 			statuses, _, err := SearchStatusesByProjectCode(value)
 			if err != nil {
-				createAlertView(g, " Alert! ", err.Error())
+				errOpts := CreateAlertViewOptions{
+					title:   " Alert! ",
+					content: err.Error(),
+				}
+				createAlertView(g, errOpts)
 
 				return nil
 			}
@@ -183,28 +191,27 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 }
 
 func SubmitAlert(g *ui.Gui, v *ui.View) error {
-	value := strings.TrimSpace(v.ViewBuffer())
+	value := strings.TrimSpace(AlertDialog.value)
 	if len(value) == 0 {
 		return nil
 	}
 
-	log.Println("wtf is value here", value)
+	g.Update(func(g *ui.Gui) error {
+		if isDeleteView(v) {
+			projectPath := fmt.Sprintf("%s.%s", ProjectsKey, strings.ToLower(value))
+			if err := config.Set(projectPath, nil); err != nil {
+				log.Panicln("Error while deleting project row", err)
+			}
+			writeConfigToFile()
+			deleteAlertView(g)
+			loadProjects()
+			ProjectsList.Focus(g)
 
-	// g.Update(func(g *ui.Gui) error {
-	// 	if isDeleteView(v) {
-	// 		if err := config.Set(UsernameKey, value); err != nil {
-	// 			log.Panicln("Error while init username", err)
-	// 		}
-	// 		writeConfigToFile()
-	// 		deletePromptView(g)
-	// 		loadProjects()
-	// 		ProjectsList.Focus(g)
+			return nil
+		}
 
-	// 		return nil
-	// 	}
-
-	// 	return nil
-	// })
+		return nil
+	})
 
 	return nil
 }
@@ -400,8 +407,17 @@ func RemoveProject(g *ui.Gui, v *ui.View) error {
 
 	projectCode := currentItem.(string)
 
-	alertContent := fmt.Sprintf(" The project [%s] will be deleted. Action can not undo.", projectCode)
-	createAlertView(g, " Are you sure? ", alertContent)
+	ProjectsList.Unfocus()
+
+	deleteOpts := CreateAlertViewOptions{
+		title: DeleteConfirmTitle,
+		content: fmt.Sprintf(`
+			The project [%s] will be deleted.
+			Action can not undo.
+			Do you want to proceed?`, projectCode),
+		value: projectCode,
+	}
+	createAlertView(g, deleteOpts)
 
 	return nil
 }

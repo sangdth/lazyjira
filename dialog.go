@@ -19,7 +19,14 @@ const (
 type Dialog struct {
 	*ui.View
 	message  string
+	value    string
 	category Category
+}
+
+type CreateAlertViewOptions struct {
+	title   string
+	content string
+	value   string
 }
 
 // CreateDialog initializes a Dialog object with an existing View by applying some
@@ -86,11 +93,20 @@ func (d *Dialog) Unfocus() {
 	d.TitleColor = ui.ColorDefault
 }
 
-// SetTitle will set the title of the View and display paging information of the
-// dialog if there are more than one pages
+/**
+ * Set the title of the View and display paging information of the
+ * dialog if there are more than one pages
+ */
 func (d *Dialog) SetTitles(title string, subtitle string) {
 	d.Title = title
 	d.Subtitle = subtitle
+}
+
+/**
+ * Sometimes the value need to be passed to next action through the Alert confirmation
+ */
+func (d *Dialog) SetValue(v string) {
+	d.value = v
 }
 
 // SetItems will (re)evaluates the dialog's items with the given data and redraws

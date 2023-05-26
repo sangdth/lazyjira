@@ -217,3 +217,7 @@ func isNewServerView(v *ui.View) bool {
 func isNewCodeView(v *ui.View) bool {
 	return strings.Contains(v.Title, InsertNewCodeTitle)
 }
+
+func isDeleteView(v *ui.View) bool {
+	return strings.Contains(v.Title, DeleteConfirmTitle)
+}
