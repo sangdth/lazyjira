@@ -56,24 +56,27 @@ func (d *Dialog) IsEmpty() bool {
 
 // Focus hightlights the View of the current Dialog
 func (d *Dialog) Focus(g *ui.Gui) {
+
 	switch d.category {
 	case PROMPT:
+		g.Cursor = true
 		d.Editable = true
 		d.FrameColor = ui.ColorBlue
 		d.TitleColor = ui.ColorBlue
 
 	case ALERT:
+		g.Cursor = false
 		d.FrameColor = ui.ColorRed
 		d.TitleColor = ui.ColorRed
 
 	default:
-		d.FrameColor = ui.ColorGreen
-		d.TitleColor = ui.ColorGreen
+		d.FrameColor = ui.ColorDefault
+		d.TitleColor = ui.ColorDefault
 	}
 
 	_, err := g.SetCurrentView(d.Name())
 	if err != nil {
-		log.Panicln("Error on SetCurrentView", err)
+		log.Panicln("Error on Focus", err)
 	}
 }
 

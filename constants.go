@@ -15,4 +15,6 @@ const (
 	InsertNewCodeTitle  = " New Project Code "
 	InsertUsernameTitle = " Enter your username "
 	InsertServerTitle   = " Enter your server address "
+
+	DialogDescription = " Press <Enter> to continue, <Esc> to cancel "
 )

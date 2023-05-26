@@ -42,7 +42,7 @@ func createPromptView(g *ui.Gui, title string) error {
 	g.Cursor = true
 
 	PromptDialog = CreateDialog(v, PROMPT)
-	PromptDialog.SetTitles(title, " (Press Esc to close) ")
+	PromptDialog.SetTitles(title, DialogDescription)
 	PromptDialog.Focus(g)
 
 	return nil
@@ -56,7 +56,7 @@ func deletePromptView(g *ui.Gui) {
 	}
 }
 
-func createAlertView(g *ui.Gui, msg string) {
+func createAlertView(g *ui.Gui, title string, content string) {
 	tw, th := g.Size()
 	v, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)
 	if err != nil && err != ui.ErrUnknownView {
@@ -66,8 +66,8 @@ func createAlertView(g *ui.Gui, msg string) {
 	g.Cursor = false
 
 	AlertDialog = CreateDialog(v, ALERT)
-	AlertDialog.SetTitles(" Error! ", " (Press Esc to close) ")
-	AlertDialog.SetContent(msg)
+	AlertDialog.SetTitles(title, DialogDescription)
+	AlertDialog.SetContent(content)
 	AlertDialog.Focus(g)
 }
 
@@ -86,21 +86,25 @@ func AddProject(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
-func CloseFloatView(g *ui.Gui, v *ui.View) error {
+func CancelDialog(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
 	case PromptView:
 		deletePromptView(g)
 		ProjectsList.Focus(g)
+		return nil
 
 	case AlertView:
 		if err := deleteAlertView(g); err != nil {
 			log.Println("Error on deletePromptView", err)
 			return err
 		}
-		PromptDialog.Focus(g)
-		g.Cursor = true
-
+		if _, err := g.View(PromptView); err == nil {
+			PromptDialog.Focus(g)
+		} else {
+			ProjectsList.Focus(g)
+		}
+		return nil
 	}
 	return nil
 }
@@ -140,14 +144,14 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			path := fmt.Sprintf("%s.%s", ProjectsKey, value)
 
 			if config.Exists(path) {
-				createAlertView(g, "Project already exist")
+				createAlertView(g, " Alert! ", "Project already exist")
 
 				return nil
 			}
 
 			statuses, _, err := SearchStatusesByProjectCode(value)
 			if err != nil {
-				createAlertView(g, err.Error())
+				createAlertView(g, " Alert! ", err.Error())
 
 				return nil
 			}
@@ -174,6 +178,33 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 
 		return nil
 	})
+
+	return nil
+}
+
+func SubmitAlert(g *ui.Gui, v *ui.View) error {
+	value := strings.TrimSpace(v.ViewBuffer())
+	if len(value) == 0 {
+		return nil
+	}
+
+	log.Println("wtf is value here", value)
+
+	// g.Update(func(g *ui.Gui) error {
+	// 	if isDeleteView(v) {
+	// 		if err := config.Set(UsernameKey, value); err != nil {
+	// 			log.Panicln("Error while init username", err)
+	// 		}
+	// 		writeConfigToFile()
+	// 		deletePromptView(g)
+	// 		loadProjects()
+	// 		ProjectsList.Focus(g)
+
+	// 		return nil
+	// 	}
+
+	// 	return nil
+	// })
 
 	return nil
 }
@@ -254,7 +285,7 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 
 	case ProjectsView:
 		if err := createStatusView(g); err == nil {
-			if err := OnEnter(g, v); err != nil {
+			if err := OnEnterProject(g, v); err != nil {
 				return err
 			}
 			ProjectsList.Unfocus()
@@ -318,8 +349,7 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
-// When pressing Enter, the Issues list might be empty, so we need to fetch it again
-func OnEnter(g *ui.Gui, v *ui.View) error {
+func OnEnterProject(g *ui.Gui, v *ui.View) error {
 	currentItem := ProjectsList.CurrentItem()
 	if currentItem == nil {
 		return nil
@@ -334,8 +364,9 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 	IssuesList.Title = " Issues | Fetching... "
 	StatusesList.Title = " Projects > Statuses | Fetching... "
 
-	// Can not nest the update
 	g.Update(func(g *ui.Gui) error {
+		// The Issues list might be empty or from different project,
+		// so we need to fetch it again
 		if IssuesList.IsEmpty() || IssuesList.code != projectCode {
 			if err := FetchIssues(g, projectCode); err != nil {
 				return err
@@ -343,6 +374,7 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 		}
 
 		oldStatuses := GetSavedStatusesByProjectCode(projectCode)
+
 		if len(oldStatuses) > 0 {
 			StatusesList.SetItems(oldStatuses)
 		} else {
@@ -356,6 +388,20 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 
 		return nil
 	})
+
+	return nil
+}
+
+func RemoveProject(g *ui.Gui, v *ui.View) error {
+	currentItem := ProjectsList.CurrentItem()
+	if currentItem == nil {
+		return nil
+	}
+
+	projectCode := currentItem.(string)
+
+	alertContent := fmt.Sprintf(" The project [%s] will be deleted. Action can not undo.", projectCode)
+	createAlertView(g, " Are you sure? ", alertContent)
 
 	return nil
 }
