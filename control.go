@@ -307,13 +307,13 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 
 func ToggleStatus(g *ui.Gui, v *ui.View) error {
 	currentItem := StatusesList.CurrentItem()
-	if currentItem == nil {
+	if currentItem == "" {
 		return nil
 	}
 
 	projectCode := strings.ToLower(IssuesList.code)
 
-	statusKey := strings.ToLower(currentItem.(string))
+	statusKey := strings.ToLower(currentItem)
 
 	path := fmt.Sprintf("%s.%s.statuses.%s", ProjectsKey, projectCode, statusKey)
 
@@ -334,7 +334,7 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 // Pressing Spacebar will trigger this one
 func OnSelectProject(g *ui.Gui, v *ui.View) error {
 	currentItem := ProjectsList.CurrentItem()
-	if currentItem == nil {
+	if currentItem == "" {
 		return nil
 	}
 
@@ -344,7 +344,7 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 
 	// Can not nest the update
 	g.Update(func(g *ui.Gui) error {
-		if err := FetchIssues(g, currentItem.(string)); err != nil {
+		if err := FetchIssues(g, currentItem); err != nil {
 			return err
 		}
 
@@ -358,11 +358,11 @@ func OnSelectProject(g *ui.Gui, v *ui.View) error {
 
 func OnEnterProject(g *ui.Gui, v *ui.View) error {
 	currentItem := ProjectsList.CurrentItem()
-	if currentItem == nil {
+	if currentItem == "" {
 		return nil
 	}
 
-	projectCode := currentItem.(string)
+	projectCode := currentItem
 
 	if err := createStatusView(g); err != nil {
 		return err
@@ -401,11 +401,11 @@ func OnEnterProject(g *ui.Gui, v *ui.View) error {
 
 func RemoveProject(g *ui.Gui, v *ui.View) error {
 	currentItem := ProjectsList.CurrentItem()
-	if currentItem == nil {
+	if currentItem == "" {
 		return nil
 	}
 
-	projectCode := currentItem.(string)
+	projectCode := currentItem
 
 	ProjectsList.Unfocus()
 

@@ -60,10 +60,10 @@ func GetSavedProjects() []string {
 	return projects
 }
 
-func GetSavedStatusesByProjectCode(code string) []interface{} {
+func GetSavedStatusesByProjectCode(code string) []string {
 	statusMap := config.StringMap(fmt.Sprintf("%s.%s.statuses", ProjectsKey, code))
 
-	statuses := make([]interface{}, len(statusMap))
+	statuses := make([]string, len(statusMap))
 
 	index := 0
 	for key := range statusMap {
@@ -87,12 +87,8 @@ func loadProjects() {
 		IssuesList.Reset()
 		IssuesList.SetTitle("No issues")
 	}
-	data := make([]interface{}, len(savedProjects))
-	for index, project := range savedProjects {
-		data[index] = project
-	}
 
-	ProjectsList.SetItems(data)
+	ProjectsList.SetItems(savedProjects)
 }
 
 func makeTabNames(name string) string {
@@ -117,7 +113,7 @@ func RenderIssuesList(issues []jira.Issue) error {
 		return nil
 	}
 
-	data := make([]interface{}, len(issues))
+	data := make([]string, len(issues))
 	for index, issue := range issues {
 		key := issue.Key
 		summary := issue.Fields.Summary
@@ -137,7 +133,7 @@ func RenderStatusesList(statuses []jira.Status) error {
 		return nil
 	}
 
-	data := make([]interface{}, len(statuses))
+	data := make([]string, len(statuses))
 	for index, status := range statuses {
 		data[index] = strings.ToUpper(status.Name)
 	}

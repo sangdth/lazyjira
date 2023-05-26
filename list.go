@@ -17,7 +17,7 @@ type List struct {
 	*ui.View
 	code      string
 	title     string
-	items     []interface{}
+	items     []string
 	pages     []Page
 	pageIndex int
 	ordered   bool
@@ -61,7 +61,7 @@ func (l *List) Unfocus() {
 
 // Reset zeros the list's slices out and clears the underlying View
 func (l *List) Reset() {
-	l.items = make([]interface{}, 0)
+	l.items = make([]string, 0)
 	l.pages = []Page{}
 	l.Clear()
 	l.ResetCursor()
@@ -87,7 +87,7 @@ func (l *List) SetTitle(title string) {
 
 // SetItems will (re)evaluates the list's items with the given data and redraws
 // the View
-func (l *List) SetItems(data []interface{}) {
+func (l *List) SetItems(data []string) {
 	l.items = data
 	l.ResetPages()
 	err := l.Draw()
@@ -97,13 +97,13 @@ func (l *List) SetItems(data []interface{}) {
 }
 
 // AddItem appends a given item to the existing list
-func (l *List) AddItem(g *ui.Gui, item interface{}) error {
+func (l *List) AddItem(g *ui.Gui, item string) error {
 	l.items = append(l.items, item)
 	l.ResetPages()
 	return l.Draw()
 }
 
-func (l *List) UpdateCurrentItem(item interface{}) {
+func (l *List) UpdateCurrentItem(item string) {
 	page := l.currPage()
 	data := l.items[page.offset : page.offset+page.limit]
 
@@ -196,9 +196,9 @@ func (l *List) MovePgUp() error {
 
 // CurrentItem returns the currently selected item of the list no matter what
 // page is being displayed
-func (l *List) CurrentItem() interface{} {
+func (l *List) CurrentItem() string {
 	if l.IsEmpty() {
-		return nil
+		return ""
 	}
 	page := l.currPage()
 	data := l.items[page.offset : page.offset+page.limit]
