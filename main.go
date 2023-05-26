@@ -24,9 +24,8 @@ var (
 )
 
 func main() {
-	if err := InitConfig(); err != nil {
-		log.Panicln("Failed to setup config file", err)
-	}
+	initConfigSetup()
+
 	// Initialize the gocui library
 	g, err := ui.NewGui(ui.OutputNormal, true)
 	if err != nil {
@@ -56,7 +55,7 @@ func main() {
 	ProjectsList.Focus(g)
 
 	g.Update(func(g *ui.Gui) error {
-		LoadProjects()
+		loadProjects()
 		return nil
 	})
 

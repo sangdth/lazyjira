@@ -9,83 +9,31 @@ import (
 
 	jira "github.com/andygrunwald/go-jira/v2/cloud"
 	ui "github.com/awesome-gocui/gocui"
+	color "github.com/gookit/color"
 	config "github.com/gookit/config/v2"
 	yaml "github.com/gookit/config/v2/yaml"
 	keyring "github.com/zalando/go-keyring"
 )
 
-func getPaths() (string, string, string) {
+func getPaths() string {
 	configHome := os.Getenv("XDG_CONFIG_HOME")
 	configDir := fmt.Sprintf("%s/%s", configHome, ProjectName)
 	configPath := fmt.Sprintf("%s/%s", configDir, "config.yaml")
 
-	return configPath, configDir, configHome
+	return configPath
 }
 
-func InitConfig() error {
-	configPath, configDir, _ := getPaths()
+func initConfigSetup() {
+	red := color.FgRed.Render
+
+	configPath := getPaths()
 
 	config.WithOptions(config.ParseEnv)
 	config.AddDriver(yaml.Driver)
 
-	// Can not find the folder, start creating it
-	if _, err := os.Stat(configDir); err != nil && os.IsNotExist(err) {
-		if err := os.Mkdir(configDir, 0755); err != nil {
-			log.Printf("Error while creating config folder %s", err)
-		}
-
-		// Assume we don't have the file as well, so create it
-		file, err := os.Create(configPath)
-		if err != nil {
-			log.Printf("Error while creating config file %s", err)
-		}
-
-		defer file.Close()
-
-		if err := config.LoadFiles(configPath); err != nil {
-			log.Panicln("Error while loading config file", err)
-		}
-	}
-
-	// Can not find the folder, start creating it
-	// if _, err := os.Stat(configDir); err != nil && os.IsNotExist(err) {
-	// if err := os.Mkdir(configDir, 0755); err != nil {
-	// 	log.Printf("Error while creating config folder %s", err)
-	// }
-
-	// // Assume we don't have the file as well, so create it
-	// file, err := os.Create(configPath)
-	// if err != nil {
-	// 	log.Printf("Error while creating config file %s", err)
-	// }
-
-	// defer file.Close()
-
-	// if !config.Exists(ProjectsKey) {
-	// 	initData := map[string]map[string]bool{
-	// 		"statuses": {
-	// 			"open": true,
-	// 		},
-	// 	}
-
-	// 	if err := config.Set(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey), initData); err != nil {
-	// 		log.Panicln("Error while init first configs", err)
-	// 	}
-
-	// 	// it is nil wtf????
-	// 	log.Println("before: ", config.Get(fmt.Sprintf("%s.%s", ProjectsKey, AssignedToMeKey)))
-	// 	writeConfigToFile()
-
-	// 	return nil // need to remove this return
-	// }
-
-	// TODO Without this LoadFiles everything will be nil
-	// how to create the file before run the init?
 	if err := config.LoadFiles(configPath); err != nil {
-		log.Panicln("Error while loading config file", err)
+		log.Fatalf("Missing config file, create one at %s", red(ConfigPathMsg))
 	}
-
-	return nil
 }
 
 func GetJiraCredentials() (string, string, string, error) {
@@ -101,10 +49,10 @@ func GetJiraCredentials() (string, string, string, error) {
 }
 
 func GetSavedProjects() []string {
-	stringMap := config.StringMap(ProjectsKey)
+	projectCodeMap := config.StringMap(ProjectsKey)
 
 	var projects []string
-	for key := range stringMap {
+	for key := range projectCodeMap {
 		projects = append(projects, strings.ToUpper(key))
 	}
 
@@ -112,12 +60,12 @@ func GetSavedProjects() []string {
 }
 
 func GetSavedStatusesByProjectCode(code string) []interface{} {
-	stringMap := config.StringMap(fmt.Sprintf("%s.%s.statuses", ProjectsKey, code))
+	statusMap := config.StringMap(fmt.Sprintf("%s.%s.statuses", ProjectsKey, code))
 
-	statuses := make([]interface{}, len(stringMap))
+	statuses := make([]interface{}, len(statusMap))
 
 	index := 0
-	for key := range stringMap {
+	for key := range statusMap {
 		statuses[index] = key
 		index++
 	}
@@ -125,7 +73,7 @@ func GetSavedStatusesByProjectCode(code string) []interface{} {
 	return statuses
 }
 
-func LoadProjects() {
+func loadProjects() {
 	ProjectsList.SetTitle(makeTabNames(ProjectsView))
 
 	savedProjects := GetSavedProjects()
@@ -188,7 +136,7 @@ func RenderStatusesList(statuses []jira.Status) error {
 
 	data := make([]interface{}, len(statuses))
 	for index, status := range statuses {
-		data[index] = strings.ToLower(status.Name)
+		data[index] = strings.ToUpper(status.Name)
 	}
 
 	StatusesList.SetItems(data)
@@ -243,7 +191,7 @@ func writeConfigToFile() {
 		log.Printf("Error while dumping config file: %s\n", err)
 	}
 
-	configPath, _, _ := getPaths()
+	configPath := getPaths()
 
 	if err := os.WriteFile(configPath, buff.Bytes(), 0755); err != nil {
 		log.Printf("Error while writing config file: %s\n", err)

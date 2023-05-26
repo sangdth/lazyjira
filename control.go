@@ -118,8 +118,10 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			}
 			writeConfigToFile()
 			deletePromptView(g)
+			loadProjects()
 			ProjectsList.Focus(g)
-			LoadProjects()
+
+			return nil
 		}
 
 		if isNewServerView(v) {
@@ -128,8 +130,10 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			}
 			writeConfigToFile()
 			deletePromptView(g)
+			loadProjects()
 			ProjectsList.Focus(g)
-			LoadProjects()
+
+			return nil
 		}
 
 		if isNewCodeView(v) {
@@ -137,33 +141,33 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 
 			if config.Exists(path) {
 				createAlertView(g, "Project already exist")
-			} else {
-				statuses, _, err := SearchStatusesByProjectCode(value)
-				if err != nil {
-					createAlertView(g, err.Error())
-				}
 
-				convertedStatuses := make(map[string]bool, len(statuses))
-				for _, status := range statuses {
-					convertedStatuses[strings.ToLower(status.Name)] = true
-				}
-
-				newValue := map[string]interface{}{
-					"statuses": convertedStatuses,
-				}
-				if err := config.Set(path, newValue); err != nil {
-					log.Panicln("Error while setting new statuses", err)
-				}
-
-				if err := config.Set(path, newValue); err != nil {
-					log.Panicln("Error while adding project code", err)
-				}
-
-				writeConfigToFile()
-				deletePromptView(g)
-				ProjectsList.Focus(g)
-				LoadProjects()
+				return nil
 			}
+
+			statuses, _, err := SearchStatusesByProjectCode(value)
+			if err != nil {
+				createAlertView(g, err.Error())
+
+				return nil
+			}
+
+			convertedStatuses := make(map[string]bool, len(statuses))
+			for _, status := range statuses {
+				convertedStatuses[strings.ToLower(status.Name)] = true
+			}
+
+			newValue := map[string]map[string]bool{
+				"statuses": convertedStatuses,
+			}
+			if err := config.Set(path, newValue); err != nil {
+				log.Panicln("Error while setting new statuses", err)
+			}
+
+			writeConfigToFile()
+			deletePromptView(g)
+			loadProjects()
+			ProjectsList.Focus(g)
 
 			return nil
 		}
@@ -271,29 +275,20 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 
 	projectCode := strings.ToLower(IssuesList.code)
 
-	statusKey := currentItem.(string)
+	statusKey := strings.ToLower(currentItem.(string))
 
 	path := fmt.Sprintf("%s.%s.statuses.%s", ProjectsKey, projectCode, statusKey)
 
-	// log.Printf("before %s", config.Get(path))
-
 	if config.Exists(path) {
-		log.Printf("Exist %s", path)
-
 		currentValue := config.Bool(path)
 		if err := config.Set(path, !currentValue); err != nil {
-			log.Printf("Error while toggling status %s", err)
+			log.Panicln("Error while toggling status", err)
 		}
 	} else {
-		log.Printf("Not Exist %s", path)
 		if err := config.Set(path, true); err != nil {
-			log.Printf("Error while adding new status value %s", err)
+			log.Panicln("Error while adding new status value", err)
 		}
 	}
-
-	log.Printf("outside")
-
-	writeConfigToFile()
 
 	return nil
 }
@@ -366,5 +361,7 @@ func OnEnter(g *ui.Gui, v *ui.View) error {
 }
 
 func Quit(g *ui.Gui, v *ui.View) error {
+	writeConfigToFile()
+
 	return ui.ErrQuit
 }

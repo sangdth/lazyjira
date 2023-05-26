@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/andygrunwald/go-jira/v2 v2.0.0-20230325080157-2e11dffbdb9a
 	github.com/awesome-gocui/gocui v1.1.0
+	github.com/gookit/color v1.5.3
 	github.com/gookit/config/v2 v2.2.1
 	github.com/zalando/go-keyring v0.2.3
 )
@@ -20,7 +21,6 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/gookit/color v1.5.2 // indirect
 	github.com/gookit/goutil v0.6.6 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect

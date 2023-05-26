@@ -4,12 +4,13 @@ const (
 	ProjectName = "lazyjira"
 
 	ProjectsKey     = "projects"
-	AssignedToMeKey = "assigned to me"
+	AssignedToMeKey = "me"
 	ServerKey       = "server"
 	UsernameKey     = "username"
 
-	HelpLink = "https://github.com/sangdth/lazyjira#getting-started"
-	JiraLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
+	ConfigPathMsg = "~/.config/lazyjira/config.yaml"
+	HelpLinkMsg   = "https://github.com/sangdth/lazyjira#getting-started"
+	JiraLinkMsg   = "https://id.atlassian.com/manage-profile/security/api-tokens"
 
 	InsertNewCodeTitle  = " New Project Code "
 	InsertUsernameTitle = " Enter your username "

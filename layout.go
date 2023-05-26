@@ -7,15 +7,17 @@ import (
 	config "github.com/gookit/config/v2"
 )
 
-// RelativeSize returns the relative size of the terminal window view
-// the first int is 30% of the width, the second is the 70% of the height
+/**
+ * Returns the relative size of the terminal window view
+ * the first int is 30% of the width, the second is the 70% of the height
+ */
 func relativeSize(g *ui.Gui) (int, int) {
 	tw, th := g.Size()
 
 	return (tw * 3) / 10, (th * 7) / 10
 }
 
-// TODO: Make helpers that do all the calculation like
+// Make helpers that do all the calculation like
 // center vertically and horizontally (similar to margin auto in css)
 // maybe something display flex could be great he he
 func layout(g *ui.Gui) error {

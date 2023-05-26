@@ -42,8 +42,8 @@ func (l *List) IsEmpty() bool {
 // Focus hightlights the View of the current List
 func (l *List) Focus(g *ui.Gui) {
 	l.Highlight = true
-	l.SelFgColor = ui.ColorGreen | ui.AttrBold
-	l.SelBgColor = ui.ColorBlack
+	l.SelFgColor = ui.ColorBlack
+	l.SelBgColor = ui.ColorGreen
 	l.FrameColor = ui.ColorGreen
 	l.TitleColor = ui.ColorGreen
 	_, err := g.SetCurrentView(l.Name())
@@ -55,6 +55,7 @@ func (l *List) Focus(g *ui.Gui) {
 // Unfocus is used to remove highlighting from the current list
 func (l *List) Unfocus() {
 	l.FrameColor = ui.ColorDefault
+	l.TitleColor = ui.ColorDefault
 	l.Highlight = false
 }
 
