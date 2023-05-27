@@ -341,6 +341,10 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 			return err
 		}
 
+		if err := FetchIssues(g, projectCode); err != nil {
+			return err
+		}
+
 		return nil
 	})
 

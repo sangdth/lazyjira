@@ -59,9 +59,18 @@ func GetSavedProjects() []string {
 	return projects
 }
 
+func getStatusesPath(code string) string {
+	return fmt.Sprintf("%s.%s.statuses", ProjectsKey, strings.ToLower(code))
+}
+
+func getStatusesMap(code string) map[string]string {
+	statusesPath := getStatusesPath(code)
+	return config.StringMap(statusesPath)
+}
+
 func GetSavedStatusesByProjectCode(code string) []string {
-	statusesPath := fmt.Sprintf("%s.%s.statuses", ProjectsKey, strings.ToLower(code))
-	statusMap := config.StringMap(statusesPath)
+	statusesPath := getStatusesPath(code)
+	statusMap := getStatusesMap(code)
 
 	keys := make([]string, 0, len(statusMap))
 	for k := range statusMap {
