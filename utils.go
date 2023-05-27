@@ -60,14 +60,26 @@ func GetSavedProjects() []string {
 }
 
 func GetSavedStatusesByProjectCode(code string) []string {
-	path := fmt.Sprintf("%s.%s.statuses", ProjectsKey, strings.ToLower(code))
-	statusMap := config.StringMap(path)
-	statuses := make([]string, len(statusMap))
+	statusesPath := fmt.Sprintf("%s.%s.statuses", ProjectsKey, strings.ToLower(code))
+	statusMap := config.StringMap(statusesPath)
 
-	index := 0
-	for key := range statusMap {
-		statuses[index] = strings.ToUpper(key)
-		index++
+	keys := make([]string, 0, len(statusMap))
+	for k := range statusMap {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	statuses := make([]string, len(keys))
+	for index, key := range keys {
+		keyPath := fmt.Sprintf("%s.%s", statusesPath, key)
+
+		richLabel := fmt.Sprintf("[ ] %s", strings.ToUpper(key))
+		if config.Bool(keyPath) {
+			richLabel = fmt.Sprintf("[v] %s", strings.ToUpper(key))
+		}
+
+		statuses[index] = richLabel
 	}
 
 	return statuses
@@ -156,7 +168,7 @@ func FetchStatuses(g *ui.Gui, code string) error {
 
 	newParsedStatuses := make([]string, len(statuses))
 	for index, status := range statuses {
-		newParsedStatuses[index] = strings.ToUpper(status.Name)
+		newParsedStatuses[index] = fmt.Sprintf("[v] %s", strings.ToUpper(status.Name))
 	}
 
 	StatusesList.SetItems(newParsedStatuses)

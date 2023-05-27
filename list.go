@@ -100,10 +100,12 @@ func (l *List) SetItems(data []string) {
 }
 
 // AddItem appends a given item to the existing list
-func (l *List) AddItem(g *ui.Gui, item string) error {
+func (l *List) AddItem(g *ui.Gui, item string) {
 	l.items = append(l.items, item)
 	l.ResetPages()
-	return l.Draw()
+	if err := l.Draw(); err != nil {
+		log.Panicln("Error on AddItem", err)
+	}
 }
 
 func (l *List) UpdateCurrentItem(item string) {

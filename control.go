@@ -313,15 +313,16 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 		return nil
 	}
 
+	currentCursor := StatusesList.currentCursorY()
 	projectCode := strings.ToLower(IssuesList.code)
-
-	statusKey := strings.ToLower(currentItem)
+	richStatusKey := strings.ToLower(currentItem)
+	statusKey := richStatusKey[4:]
 
 	path := fmt.Sprintf("%s.%s.statuses.%s", ProjectsKey, projectCode, statusKey)
 
 	if config.Exists(path) {
-		currentValue := config.Bool(path)
-		if err := config.Set(path, !currentValue); err != nil {
+		isChecked := config.Bool(path)
+		if err := config.Set(path, !isChecked); err != nil {
 			log.Panicln("Error while toggling status", err)
 		}
 	} else {
@@ -329,6 +330,19 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 			log.Panicln("Error while adding new status value", err)
 		}
 	}
+
+	g.Update(func(g *ui.Gui) error {
+		if err := FetchStatuses(g, projectCode); err != nil {
+			StatusesList.SetTitle(" Projects > Statuses (Error!) ")
+			return nil
+		}
+
+		if err := StatusesList.SetCursor(0, currentCursor); err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return nil
 }
