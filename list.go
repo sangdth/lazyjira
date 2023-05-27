@@ -69,8 +69,11 @@ func (l *List) Reset() {
 
 // Change the project code means old data will be gone
 func (l *List) SetCode(code string) {
-	l.code = code
-	l.Reset()
+	// only do if code is new
+	if l.code != code {
+		l.code = code
+		l.Reset()
+	}
 }
 
 // SetTitle will set the title of the View and display paging information of the

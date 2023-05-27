@@ -61,13 +61,14 @@ func GetSavedProjects() []string {
 }
 
 func GetSavedStatusesByProjectCode(code string) []string {
-	statusMap := config.StringMap(fmt.Sprintf("%s.%s.statuses", ProjectsKey, code))
+	path := fmt.Sprintf("%s.%s.statuses", ProjectsKey, strings.ToLower(code))
+	statusMap := config.StringMap(path)
 
 	statuses := make([]string, len(statusMap))
 
 	index := 0
 	for key := range statusMap {
-		statuses[index] = key
+		statuses[index] = strings.ToUpper(key)
 		index++
 	}
 
@@ -201,6 +202,33 @@ func spaces(n int) string {
 	}
 	return s.String()
 }
+
+// func startSpinner(g *ui.Gui, v *ui.View) {
+// 	spinnerInterval := 110 * time.Millisecond
+
+// 	oldTitle := v.Title
+// 	// Set the initial spinner state
+// 	spinnerState := 0
+// 	spinnerFrames := []string{"|", "/", "-", "\\"}
+
+// 	// Create a function to update the view's title with the spinner
+// 	updateTitle := func(v *ui.View) {
+// 		v.Title = fmt.Sprintf(" %s %s ", oldTitle, spinnerFrames[spinnerState])
+// 		spinnerState = (spinnerState + 1) % len(spinnerFrames)
+// 	}
+
+// 	go func() {
+// 		for {
+// 			g.Update(func(g *ui.Gui) error {
+// 				if v, err := g.View(StatusesView); err == nil {
+// 					updateTitle(v)
+// 				}
+// 				return nil
+// 			})
+// 			time.Sleep(spinnerInterval)
+// 		}
+// 	}()
+// }
 
 func isNewUsernameView(v *ui.View) bool {
 	return strings.Contains(v.Title, InsertUsernameTitle) // || strings.Contains(v.Title, "try again")

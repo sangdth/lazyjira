@@ -9,11 +9,6 @@ import (
 	config "github.com/gookit/config/v2"
 )
 
-var (
-	PromptDialog *Dialog
-	AlertDialog  *Dialog
-)
-
 func createStatusView(g *ui.Gui) error {
 	_, th := g.Size()
 	rw, rh := relativeSize(g)
@@ -270,11 +265,13 @@ func ChangeView(g *ui.Gui, v *ui.View) error {
 		if strings.Contains(IssuesList.Title, "bookmarks") {
 			g.SelFgColor = ui.ColorMagenta | ui.AttrBold
 		}
-
 		IssuesList.Focus(g)
+		return nil
+
 	case IssuesView:
 		ProjectsList.Focus(g)
 		IssuesList.Unfocus()
+		return nil
 	}
 
 	return nil
@@ -289,17 +286,13 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 		if err := g.DeleteView(StatusesView); err != nil {
 			return err
 		}
+		return nil
 
 	case ProjectsView:
-		if err := createStatusView(g); err == nil {
-			if err := OnEnterProject(g, v); err != nil {
-				return err
-			}
-			ProjectsList.Unfocus()
-			StatusesList.Focus(g)
-		} else {
-			log.Panicln("Error on createStatusView()", err)
+		if err := OnEnterProject(g, v); err != nil {
+			return err
 		}
+		return nil
 	}
 
 	return nil
@@ -333,22 +326,23 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 
 // Pressing Spacebar will trigger this one
 func OnSelectProject(g *ui.Gui, v *ui.View) error {
-	currentItem := ProjectsList.CurrentItem()
-	if currentItem == "" {
+	projectCode := ProjectsList.CurrentItem()
+	if projectCode == "" {
 		return nil
 	}
 
 	IssuesList.Clear()
 
-	IssuesList.Title = " Issues | Fetching... "
+	IssuesList.SetTitle(" Issues | Fetching... ")
+	IssuesList.SetCode(projectCode)
 
 	// Can not nest the update
 	g.Update(func(g *ui.Gui) error {
-		if err := FetchIssues(g, currentItem); err != nil {
+		if err := FetchIssues(g, projectCode); err != nil {
 			return err
 		}
 
-		IssuesList.Title = " Issues "
+		IssuesList.SetTitle(" Issues ")
 
 		return nil
 	})
@@ -364,19 +358,24 @@ func OnEnterProject(g *ui.Gui, v *ui.View) error {
 
 	projectCode := currentItem
 
+	IssuesList.SetCode(projectCode)
+
+	ProjectsList.SetTitle(" Projects > Statuses | Fetching... ")
+	IssuesList.SetTitle(" Issues | Fetching... ")
+
+	isSameProject := IssuesList.code == projectCode
+
 	if err := createStatusView(g); err != nil {
 		return err
 	}
 
-	IssuesList.Title = " Issues | Fetching... "
-	StatusesList.Title = " Projects > Statuses | Fetching... "
-
 	g.Update(func(g *ui.Gui) error {
 		// The Issues list might be empty or from different project,
 		// so we need to fetch it again
-		if IssuesList.IsEmpty() || IssuesList.code != projectCode {
+		if IssuesList.IsEmpty() || !isSameProject {
 			if err := FetchIssues(g, projectCode); err != nil {
-				return err
+				IssuesList.SetTitle(" Issues (Error!) ")
+				return nil
 			}
 		}
 
@@ -386,12 +385,17 @@ func OnEnterProject(g *ui.Gui, v *ui.View) error {
 			StatusesList.SetItems(oldStatuses)
 		} else {
 			if err := FetchStatuses(g, projectCode); err != nil {
-				return err
+				StatusesList.SetTitle(" Projects > Statuses (Error!) ")
+				return nil
 			}
 		}
 
-		IssuesList.Title = " Issues "
-		StatusesList.SetTitle(" Projects > Statuses ")
+		IssuesList.SetTitle(" Issues ")
+		StatusesList.SetTitle(fmt.Sprintf(" Projects > Statuses (%s)", projectCode))
+		ProjectsList.SetTitle(" Projects ")
+
+		ProjectsList.Unfocus()
+		StatusesList.Focus(g)
 
 		return nil
 	})

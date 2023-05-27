@@ -20,7 +20,11 @@ var (
 	ProjectsList *List
 	StatusesList *List
 	IssuesList   *List
-	Details      *ui.View
+
+	Details *ui.View
+
+	PromptDialog *Dialog
+	AlertDialog  *Dialog
 )
 
 func main() {
