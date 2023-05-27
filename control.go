@@ -25,8 +25,7 @@ func createStatusView(g *ui.Gui) error {
 	return err
 }
 
-// createPromptView creates a general purpose view to be used as input source
-// from the user
+// Creates a general purpose view to be used as input source
 func createPromptView(g *ui.Gui, title string) error {
 	tw, th := g.Size()
 	v, err := g.SetView(PromptView, tw/6, (th/2)-8, (tw*5)/6, (th/2)-6, 0)
@@ -43,7 +42,6 @@ func createPromptView(g *ui.Gui, title string) error {
 	return nil
 }
 
-// deletePromptView deletes the current prompt view
 func deletePromptView(g *ui.Gui) {
 	g.Cursor = false
 	if err := g.DeleteView(PromptView); err != nil {
@@ -51,6 +49,7 @@ func deletePromptView(g *ui.Gui) {
 	}
 }
 
+// Creates a view to be used as error alert or confirmation dialog
 func createAlertView(g *ui.Gui, o CreateAlertViewOptions) {
 	tw, th := g.Size()
 	v, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)
@@ -84,6 +83,7 @@ func AddProject(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
+// Used when user press Esc to close or cancel a dialog
 func CancelDialog(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
@@ -185,6 +185,7 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
+// Used when user press Enter to confirm a dialog (delete or ignore something)
 func SubmitAlert(g *ui.Gui, v *ui.View) error {
 	value := strings.TrimSpace(AlertDialog.value)
 	if len(value) == 0 {
@@ -211,6 +212,7 @@ func SubmitAlert(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
+// Move cursor up on list
 func ListUp(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
@@ -233,6 +235,7 @@ func ListUp(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
+// Move cursor down on list
 func ListDown(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
@@ -277,6 +280,7 @@ func ChangeView(g *ui.Gui, v *ui.View) error {
 	return nil
 }
 
+// The Projects view has another second tab for Statuses
 func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
@@ -289,6 +293,11 @@ func SwitchProjectTab(g *ui.Gui, v *ui.View) error {
 		return nil
 
 	case ProjectsView:
+		if err := createStatusView(g); err != nil {
+			return err
+		}
+		ProjectsList.Unfocus()
+		StatusesList.Focus(g)
 		if err := OnEnterProject(g, v); err != nil {
 			return err
 		}
@@ -360,18 +369,12 @@ func OnEnterProject(g *ui.Gui, v *ui.View) error {
 
 	IssuesList.SetCode(projectCode)
 
-	ProjectsList.SetTitle(" Projects > Statuses | Fetching... ")
+	StatusesList.SetTitle(" Projects > Statuses | Fetching... ")
 	IssuesList.SetTitle(" Issues | Fetching... ")
 
 	isSameProject := IssuesList.code == projectCode
 
-	if err := createStatusView(g); err != nil {
-		return err
-	}
-
 	g.Update(func(g *ui.Gui) error {
-		// The Issues list might be empty or from different project,
-		// so we need to fetch it again
 		if IssuesList.IsEmpty() || !isSameProject {
 			if err := FetchIssues(g, projectCode); err != nil {
 				IssuesList.SetTitle(" Issues (Error!) ")
@@ -379,23 +382,14 @@ func OnEnterProject(g *ui.Gui, v *ui.View) error {
 			}
 		}
 
-		oldStatuses := GetSavedStatusesByProjectCode(projectCode)
-
-		if len(oldStatuses) > 0 {
-			StatusesList.SetItems(oldStatuses)
-		} else {
-			if err := FetchStatuses(g, projectCode); err != nil {
-				StatusesList.SetTitle(" Projects > Statuses (Error!) ")
-				return nil
-			}
+		if err := FetchStatuses(g, projectCode); err != nil {
+			StatusesList.SetTitle(" Projects > Statuses (Error!) ")
+			return nil
 		}
 
 		IssuesList.SetTitle(" Issues ")
 		StatusesList.SetTitle(fmt.Sprintf(" Projects > Statuses (%s)", projectCode))
 		ProjectsList.SetTitle(" Projects ")
-
-		ProjectsList.Unfocus()
-		StatusesList.Focus(g)
 
 		return nil
 	})

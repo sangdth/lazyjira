@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	jira "github.com/andygrunwald/go-jira/v2/cloud"
 	ui "github.com/awesome-gocui/gocui"
 	color "github.com/gookit/color"
 	config "github.com/gookit/config/v2"
@@ -63,7 +62,6 @@ func GetSavedProjects() []string {
 func GetSavedStatusesByProjectCode(code string) []string {
 	path := fmt.Sprintf("%s.%s.statuses", ProjectsKey, strings.ToLower(code))
 	statusMap := config.StringMap(path)
-
 	statuses := make([]string, len(statusMap))
 
 	index := 0
@@ -105,46 +103,8 @@ func makeTabNames(name string) string {
 	return "Something went wrong in making name"
 }
 
-// Make the from for project key, currently hardcoded "FF"
-func RenderIssuesList(issues []jira.Issue) error {
-	IssuesList.Reset()
-
-	if len(issues) == 0 {
-		IssuesList.SetTitle(fmt.Sprintf("No issues in %s", "FF"))
-		return nil
-	}
-
-	data := make([]string, len(issues))
-	for index, issue := range issues {
-		key := issue.Key
-		summary := issue.Fields.Summary
-		row := fmt.Sprintf("%-2s %s", key, summary)
-		data[index] = row
-	}
-
-	IssuesList.SetItems(data)
-
-	return nil
-}
-
-func RenderStatusesList(statuses []jira.Status) error {
-	StatusesList.Reset()
-
-	if len(statuses) == 0 {
-		return nil
-	}
-
-	data := make([]string, len(statuses))
-	for index, status := range statuses {
-		data[index] = strings.ToUpper(status.Name)
-	}
-
-	StatusesList.SetItems(data)
-
-	return nil
-}
-
 func FetchIssues(g *ui.Gui, code string) error {
+	IssuesList.Reset()
 	IssuesList.SetCode(code)
 
 	issues, err := SearchIssuesByProjectCode(code)
@@ -154,15 +114,34 @@ func FetchIssues(g *ui.Gui, code string) error {
 		return err
 	}
 
-	if err := RenderIssuesList(issues); err != nil {
-		return err
+	if len(issues) == 0 {
+		IssuesList.SetTitle(fmt.Sprintf("No issues in %s", code))
+		return nil
 	}
+
+	parsedIssues := make([]string, len(issues))
+	for index, issue := range issues {
+		key := issue.Key
+		summary := issue.Fields.Summary
+		row := fmt.Sprintf("%-2s %s", key, summary)
+		parsedIssues[index] = row
+	}
+
+	IssuesList.SetItems(parsedIssues)
 
 	return nil
 }
 
 func FetchStatuses(g *ui.Gui, code string) error {
+	StatusesList.Reset()
 	StatusesList.SetCode(code)
+
+	oldParsedStatuses := GetSavedStatusesByProjectCode(code)
+
+	if len(oldParsedStatuses) > 0 {
+		StatusesList.SetItems(oldParsedStatuses)
+		return nil
+	}
 
 	statuses, _, err := SearchStatusesByProjectCode(code)
 	if err != nil {
@@ -171,9 +150,16 @@ func FetchStatuses(g *ui.Gui, code string) error {
 		return err
 	}
 
-	if err := RenderStatusesList(statuses); err != nil {
-		return err
+	if len(statuses) == 0 {
+		return nil
 	}
+
+	newParsedStatuses := make([]string, len(statuses))
+	for index, status := range statuses {
+		newParsedStatuses[index] = strings.ToUpper(status.Name)
+	}
+
+	StatusesList.SetItems(newParsedStatuses)
 
 	return nil
 }

@@ -7,7 +7,6 @@ require (
 	github.com/awesome-gocui/gocui v1.1.0
 	github.com/gookit/color v1.5.3
 	github.com/gookit/config/v2 v2.2.1
-	github.com/theckman/yacspin v0.13.12
 	github.com/zalando/go-keyring v0.2.3
 )
 
