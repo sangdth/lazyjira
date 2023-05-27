@@ -252,3 +252,7 @@ func isNewCodeView(v *ui.View) bool {
 func isDeleteView(v *ui.View) bool {
 	return strings.Contains(v.Title, DeleteConfirmTitle)
 }
+
+func isCreatingBranchView(v *ui.View) bool {
+	return strings.Contains(v.Title, NewBranchTitle)
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os/exec"
 	"strings"
 
 	ui "github.com/awesome-gocui/gocui"
@@ -204,6 +205,16 @@ func SubmitAlert(g *ui.Gui, v *ui.View) error {
 			ProjectsList.Focus(g)
 
 			return nil
+		}
+
+		if isCreatingBranchView(v) {
+			cmd := exec.Command("git", "branch", "-b", value)
+			err := cmd.Run()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Printf("Created branch: %s", value)
 		}
 
 		return nil
@@ -443,6 +454,33 @@ func RemoveProject(g *ui.Gui, v *ui.View) error {
 		value: projectCode,
 	}
 	createAlertView(g, deleteOpts)
+
+	return nil
+}
+
+// Create git branch from selected issue
+func GitBranchPrompt(g *ui.Gui, v *ui.View) error {
+	currentItem := IssuesList.CurrentItem()
+	if currentItem == "" {
+		return nil
+	}
+
+	issueName := strings.ReplaceAll(currentItem, " ", "-")
+
+	prefix := config.String(GitPrefixKey)
+
+	branchName := issueName
+	if prefix != "" {
+		branchName = fmt.Sprintf("%s/%s", prefix, issueName)
+	}
+
+	createAlertView(g, CreateAlertViewOptions{
+		title: NewBranchTitle,
+		content: fmt.Sprintf(`
+			The branch [ %s ] will be created.
+			Do you want to proceed?`, branchName),
+		value: branchName,
+	})
 
 	return nil
 }

@@ -83,6 +83,9 @@ func keybindings(g *ui.Gui) error {
 	if err := g.SetKeybinding(IssuesView, ui.KeyArrowUp, ui.ModNone, ListUp); err != nil {
 		log.Fatal("Failed to set keybindings", err)
 	}
+	if err := g.SetKeybinding(IssuesView, 'g', ui.ModNone, GitBranchPrompt); err != nil {
+		log.Fatal("Failed to set keybindings", err)
+	}
 
 	// ALL VIEWS
 	if err := g.SetKeybinding(AllViews, ui.KeyCtrlC, ui.ModNone, Quit); err != nil {
