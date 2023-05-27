@@ -262,17 +262,26 @@ func ChangeView(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
 	case ProjectsView:
-		if v == ProjectsList.View {
-			ProjectsList.Unfocus()
-		}
+		ProjectsList.Unfocus()
 		if strings.Contains(IssuesList.Title, "bookmarks") {
 			g.SelFgColor = ui.ColorMagenta | ui.AttrBold
 		}
 		IssuesList.Focus(g)
 		return nil
 
+	case StatusesView:
+		StatusesList.Unfocus()
+		IssuesList.Focus(g)
+		return nil
+
 	case IssuesView:
-		ProjectsList.Focus(g)
+		if _, err := g.View(ProjectsView); err == nil {
+			ProjectsList.Focus(g)
+		}
+		if _, err := g.View(StatusesView); err == nil {
+			StatusesList.Focus(g)
+		}
+
 		IssuesList.Unfocus()
 		return nil
 	}
