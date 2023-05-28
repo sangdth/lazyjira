@@ -25,15 +25,11 @@ func layout(g *ui.Gui) error {
 	rw, rh := relativeSize(g)
 
 	if !config.Exists(ServerKey) {
-		if err := createPromptView(g, InsertServerTitle); err != nil {
-			log.Panicln("Error while inserting server", err)
-		}
+		createPromptView(g, CreateDialogOptions{title: InsertServerTitle})
 	}
 
 	if !config.Exists(UsernameKey) {
-		if err := createPromptView(g, InsertUsernameTitle); err != nil {
-			log.Panicln("Error while inserting username", err)
-		}
+		createPromptView(g, CreateDialogOptions{title: InsertUsernameTitle})
 	}
 
 	if _, err := g.SetView(ProjectsView, 0, 0, rw, th-rh, 0); err != nil {

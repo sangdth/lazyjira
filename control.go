@@ -27,20 +27,20 @@ func createStatusView(g *ui.Gui) error {
 }
 
 // Creates a general purpose view to be used as input source
-func createPromptView(g *ui.Gui, title string) error {
+func createPromptView(g *ui.Gui, o CreateDialogOptions) {
 	tw, th := g.Size()
 	v, err := g.SetView(PromptView, tw/6, (th/2)-8, (tw*5)/6, (th/2)-6, 0)
 	if err != nil && err != ui.ErrUnknownView {
-		return err
+		log.Panicln(err)
 	}
 
 	g.Cursor = true
 
 	PromptDialog = CreateDialog(v, PROMPT)
-	PromptDialog.SetTitles(title, DialogDescription)
+	PromptDialog.SetTitles(o.title, DialogDescription)
+	PromptDialog.SetContent(o.content)
+	PromptDialog.SetValue(o.value)
 	PromptDialog.Focus(g)
-
-	return nil
 }
 
 func deletePromptView(g *ui.Gui) {
@@ -51,7 +51,7 @@ func deletePromptView(g *ui.Gui) {
 }
 
 // Creates a view to be used as error alert or confirmation dialog
-func createAlertView(g *ui.Gui, o CreateAlertViewOptions) {
+func createAlertView(g *ui.Gui, o CreateDialogOptions) {
 	tw, th := g.Size()
 	v, err := g.SetView(AlertView, tw/6, (th/2)-12, (tw*5)/6, (th/2)-6, 0)
 	if err != nil && err != ui.ErrUnknownView {
@@ -77,9 +77,7 @@ func deleteAlertView(g *ui.Gui) {
 func AddProject(g *ui.Gui, v *ui.View) error {
 	ProjectsList.Unfocus()
 
-	if err := createPromptView(g, InsertNewCodeTitle); err != nil {
-		log.Panicln("Error on AddProject", err)
-	}
+	createPromptView(g, CreateDialogOptions{title: InsertNewCodeTitle})
 
 	return nil
 }
@@ -140,7 +138,7 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			path := fmt.Sprintf("%s.%s", ProjectsKey, value)
 
 			if config.Exists(path) {
-				existOpts := CreateAlertViewOptions{
+				existOpts := CreateDialogOptions{
 					title:   " Alert! ",
 					content: "Project already exist",
 				}
@@ -151,7 +149,7 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 
 			statuses, _, err := SearchStatusesByProjectCode(value)
 			if err != nil {
-				errOpts := CreateAlertViewOptions{
+				errOpts := CreateDialogOptions{
 					title:   " Alert! ",
 					content: err.Error(),
 				}
@@ -176,6 +174,20 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			deletePromptView(g)
 			loadProjects()
 			ProjectsList.Focus(g)
+
+			return nil
+		}
+
+		if isCreatingBranchView(v) {
+			cmd := exec.Command("git", "branch", "-b", value)
+			err := cmd.Run()
+			if err != nil {
+				log.Printf("------- %s", err)
+			}
+
+			log.Printf("Created branch: %s", value)
+			deletePromptView(g)
+			IssuesList.Focus(g)
 
 			return nil
 		}
@@ -205,16 +217,6 @@ func SubmitAlert(g *ui.Gui, v *ui.View) error {
 			ProjectsList.Focus(g)
 
 			return nil
-		}
-
-		if isCreatingBranchView(v) {
-			cmd := exec.Command("git", "branch", "-b", value)
-			err := cmd.Run()
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			log.Printf("Created branch: %s", value)
 		}
 
 		return nil
@@ -445,7 +447,7 @@ func RemoveProject(g *ui.Gui, v *ui.View) error {
 
 	ProjectsList.Unfocus()
 
-	deleteOpts := CreateAlertViewOptions{
+	deleteOpts := CreateDialogOptions{
 		title: DeleteConfirmTitle,
 		content: fmt.Sprintf(`
 			The project [%s] will be deleted.
@@ -474,13 +476,15 @@ func GitBranchPrompt(g *ui.Gui, v *ui.View) error {
 		branchName = fmt.Sprintf("%s/%s", prefix, issueName)
 	}
 
-	createAlertView(g, CreateAlertViewOptions{
-		title: NewBranchTitle,
-		content: fmt.Sprintf(`
-			The branch [ %s ] will be created.
-			Do you want to proceed?`, branchName),
-		value: branchName,
+	createPromptView(g, CreateDialogOptions{
+		title:   NewBranchTitle,
+		content: branchName,
+		value:   branchName,
 	})
+
+	if err := PromptDialog.SetCursor(len(branchName), 0); err != nil {
+		return err
+	}
 
 	return nil
 }

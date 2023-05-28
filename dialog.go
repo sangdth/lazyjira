@@ -23,7 +23,7 @@ type Dialog struct {
 	category Category
 }
 
-type CreateAlertViewOptions struct {
+type CreateDialogOptions struct {
 	title   string
 	content string
 	value   string
