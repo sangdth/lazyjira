@@ -87,8 +87,15 @@ func CancelDialog(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
 	case PromptView:
+		if _, err := g.View(ProjectsView); err == nil && isNewCodeView(v) {
+			ProjectsList.Focus(g)
+		}
+		if _, err := g.View(IssuesView); err == nil && isCreatingBranchView(v) {
+			IssuesList.Focus(g)
+		}
+
 		deletePromptView(g)
-		ProjectsList.Focus(g)
+
 		return nil
 
 	case AlertView:
