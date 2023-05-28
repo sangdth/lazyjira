@@ -68,12 +68,16 @@ func getStatusesMap(code string) map[string]string {
 	return config.StringMap(statusesPath)
 }
 
+// Currently we have problem:
+// Despite we Set("projects.test") value: { statuses: { done: true, to do: false } }
+// and despite we can see exactly correct value when Get("projects.test")
+// Config.Get("projects.test.statuses.done") will return nil
 func GetSavedStatusesByProjectCode(code string) []string {
 	statusesPath := getStatusesPath(code)
-	statusMap := getStatusesMap(code)
+	statusesMap := getStatusesMap(code)
 
-	keys := make([]string, 0, len(statusMap))
-	for k := range statusMap {
+	keys := make([]string, 0, len(statusesMap))
+	for k := range statusesMap {
 		keys = append(keys, k)
 	}
 
@@ -200,6 +204,10 @@ func writeConfigToFile() {
 	if err := os.WriteFile(configPath, buff.Bytes(), 0755); err != nil {
 		log.Printf("Error while writing config file: %s\n", err)
 	}
+
+	if err := config.ReloadFiles(); err != nil {
+		log.Println("---- error on reload config")
+	}
 }
 
 func spaces(n int) string {
@@ -245,7 +253,7 @@ func isNewServerView(v *ui.View) bool {
 	return strings.Contains(v.Title, InsertServerTitle)
 }
 
-func isNewCodeView(v *ui.View) bool {
+func isNewProjectView(v *ui.View) bool {
 	return strings.Contains(v.Title, InsertNewCodeTitle)
 }
 

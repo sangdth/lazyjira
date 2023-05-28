@@ -30,6 +30,8 @@ func GetJiraClient() (*jira.Client, error) {
 func MakeJQL(rawCode string) string {
 	code := strings.ToLower(rawCode)
 
+	var statusQL string
+
 	statusMap := getStatusesMap(code)
 
 	filtered := make([]string, 0)
@@ -39,16 +41,16 @@ func MakeJQL(rawCode string) string {
 		}
 	}
 
-	joined := strings.Join(filtered, ",")
-
-	switch code {
-
-	case AssignedToMeKey:
-		return "assignee=currentUser()"
-
-	default:
-		return fmt.Sprintf("project IN (%s) AND status IN (%s)", code, joined)
+	if len(filtered) > 0 {
+		joined := strings.Join(filtered, ",")
+		statusQL = fmt.Sprintf("AND status IN (%s)", joined)
 	}
+
+	if code == AssignedToMeKey {
+		return fmt.Sprintf("assignee=currentUser() %s", statusQL)
+	}
+
+	return fmt.Sprintf("project IN (%s) %s", code, statusQL)
 }
 
 func SearchIssuesByProjectCode(projectCode string) ([]jira.Issue, error) {

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	ui "github.com/awesome-gocui/gocui"
@@ -89,7 +88,7 @@ func CancelDialog(g *ui.Gui, v *ui.View) error {
 	switch v.Name() {
 
 	case PromptView:
-		if _, err := g.View(ProjectsView); err == nil && isNewCodeView(v) {
+		if _, err := g.View(ProjectsView); err == nil && isNewProjectView(v) {
 			ProjectsList.Focus(g)
 		}
 		if _, err := g.View(IssuesView); err == nil && isCreatingBranchView(v) {
@@ -143,7 +142,7 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 			return nil
 		}
 
-		if isNewCodeView(v) {
+		if isNewProjectView(v) {
 			path := fmt.Sprintf("%s.%s", ProjectsKey, value)
 
 			if config.Exists(path) {
@@ -167,20 +166,26 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 				return nil
 			}
 
-			convertedStatuses := make(map[string]bool, len(statuses))
+			convertedStatuses := make(map[string]interface{}, len(statuses))
 			for _, status := range statuses {
 				convertedStatuses[strings.ToLower(status.Name)] = true
 			}
 
-			newValue := map[string]map[string]bool{
+			newValue := map[string]map[string]interface{}{
 				"statuses": convertedStatuses,
 			}
 			if err := config.Set(path, newValue); err != nil {
 				log.Panicln("Error while setting new statuses", err)
 			}
 
+			// how to use Data?
+			// oldData := config.Data()
+			// oldData[value] = newStatuses
+			// config.SetData(oldData)
+
 			writeConfigToFile()
 			deletePromptView(g)
+
 			loadProjects()
 			ProjectsList.Focus(g)
 
@@ -188,12 +193,6 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 		}
 
 		if isCreatingBranchView(v) {
-			if wd, err := os.Getwd(); err != nil {
-				fmt.Printf("Error getting working directory: %s\n", err)
-			} else {
-				fmt.Println("Current working directory:", wd)
-			}
-
 			repo, err := git.PlainOpen(".")
 			if err != nil {
 				log.Fatal(err)
@@ -230,7 +229,6 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 				log.Fatal(err)
 			}
 
-			log.Printf("Created branch: %s", value)
 			deletePromptView(g)
 			IssuesList.Focus(g)
 
@@ -384,16 +382,18 @@ func ToggleStatus(g *ui.Gui, v *ui.View) error {
 	projectCode := strings.ToLower(IssuesList.code)
 	richStatusKey := strings.ToLower(currentItem)
 	statusKey := richStatusKey[4:]
+	statusesPath := getStatusesPath(projectCode)
 
-	path := fmt.Sprintf("%s.%s.statuses.%s", ProjectsKey, projectCode, statusKey)
+	path := fmt.Sprintf("%s.%s", statusesPath, statusKey)
 
-	if config.Exists(path) {
+	if config.Exists(path) { // OLD
 		isChecked := config.Bool(path)
 		if err := config.Set(path, !isChecked); err != nil {
 			log.Panicln("Error while toggling status", err)
 		}
-	} else {
-		if err := config.Set(path, true); err != nil {
+	} else { // NEWLY ADDED
+		isChecked := richStatusKey[:3] == "[v]"
+		if err := config.Set(path, !isChecked); err != nil {
 			log.Panicln("Error while adding new status value", err)
 		}
 	}
