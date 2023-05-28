@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
-	"os/exec"
+	"os"
 	"strings"
 
 	ui "github.com/awesome-gocui/gocui"
+	git "github.com/go-git/go-git/v5"
+	plumbing "github.com/go-git/go-git/v5/plumbing"
 	config "github.com/gookit/config/v2"
 )
 
@@ -186,10 +188,46 @@ func SubmitPrompt(g *ui.Gui, v *ui.View) error {
 		}
 
 		if isCreatingBranchView(v) {
-			cmd := exec.Command("git", "branch", "-b", value)
-			err := cmd.Run()
+			if wd, err := os.Getwd(); err != nil {
+				fmt.Printf("Error getting working directory: %s\n", err)
+			} else {
+				fmt.Println("Current working directory:", wd)
+			}
+
+			repo, err := git.PlainOpen(".")
 			if err != nil {
-				log.Printf("------- %s", err)
+				log.Fatal(err)
+			}
+
+			// Get the HEAD reference
+			headRef, err := repo.Head()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Create a new reference for the new branch
+			newBranchRef := plumbing.NewBranchReferenceName(value)
+
+			// Create a new branch from the current commit
+			newBranch := plumbing.NewHashReference(newBranchRef, headRef.Hash())
+
+			// Update the references in the repository
+			err = repo.Storer.SetReference(newBranch)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Checkout the new branch
+			w, err := repo.Worktree()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = w.Checkout(&git.CheckoutOptions{
+				Branch: newBranchRef,
+			})
+			if err != nil {
+				log.Fatal(err)
 			}
 
 			log.Printf("Created branch: %s", value)
