@@ -6,7 +6,7 @@ require (
 	github.com/andygrunwald/go-jira/v2 v2.0.0-20230325080157-2e11dffbdb9a
 	github.com/awesome-gocui/gocui v1.1.0
 	github.com/go-git/go-git/v5 v5.8.1
-	github.com/gookit/color v1.5.3
+	github.com/gookit/color v1.5.4
 	github.com/gookit/config/v2 v2.2.3
 	github.com/zalando/go-keyring v0.2.3
 )
