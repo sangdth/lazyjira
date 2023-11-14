@@ -3,7 +3,7 @@ module github.com/sangdth/lazyjira
 go 1.20
 
 require (
-	github.com/andygrunwald/go-jira/v2 v2.0.0-20230325080157-2e11dffbdb9a
+	github.com/andygrunwald/go-jira/v2 v2.0.0-20231114185916-57d1e28f1bb7
 	github.com/awesome-gocui/gocui v1.1.0
 	github.com/go-git/go-git/v5 v5.10.0
 	github.com/gookit/color v1.5.4

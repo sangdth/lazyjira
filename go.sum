@@ -16,6 +16,8 @@ github.com/alessio/shellescape v1.4.1 h1:V7yhSDDn8LP4lc4jS8pFkt0zCnzVJlG5JXy9BVK
 github.com/alessio/shellescape v1.4.1/go.mod h1:PZAiSCk0LJaZkiCSkPv8qIobYglO3FPpyFjDCtHLS30=
 github.com/andygrunwald/go-jira/v2 v2.0.0-20230325080157-2e11dffbdb9a h1:qSrg15WORClvHQfGe9RyFiDG52MeEpVj5qEs6O7QBE4=
 github.com/andygrunwald/go-jira/v2 v2.0.0-20230325080157-2e11dffbdb9a/go.mod h1:TrfsnL20VgD+KgEw4gbTYuSAPE8T1ZxjMCFBGgGvNvI=
+github.com/andygrunwald/go-jira/v2 v2.0.0-20231114185916-57d1e28f1bb7 h1:pTVdaY1ThOVQLq8SjgaiRo4g+5KOgxKVKpDS+Vp2Ock=
+github.com/andygrunwald/go-jira/v2 v2.0.0-20231114185916-57d1e28f1bb7/go.mod h1:TrfsnL20VgD+KgEw4gbTYuSAPE8T1ZxjMCFBGgGvNvI=
 github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be h1:9AeTilPcZAjCFIImctFaOjnTIavg87rW78vTPkQqLI8=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/awesome-gocui/gocui v1.1.0 h1:db2j7yFEoHZjpQFeE2xqiatS8bm1lO3THeLwE6MzOII=
